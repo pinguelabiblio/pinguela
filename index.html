@@ -689,6 +689,71 @@
             padding: 0 !important;
             border-bottom: none !important;
         }
+        .efemeride-imaxe img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .efemeride-badge-letras {
+            width: 120px;
+            height: 120px;
+            border-radius: 6px;
+            background: linear-gradient(160deg, #F6AD55, #D69A2E, #F6E05E);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 12px 40px rgba(214,154,46,0.25);
+            border: 1px solid rgba(255,255,255,0.15);
+            position: relative;
+            transform: perspective(800px) rotateY(-8deg);
+            z-index: 2;
+            transition: transform 0.5s ease;
+            gap: 1px;
+            margin-left: 10px;
+        }
+        .efemeride-badge-letras:hover {
+            transform: perspective(800px) rotateY(0deg);
+        }
+        .efemeride-badge-letras::before {
+            content: '';
+            position: absolute;
+            top: -3px; left: -3px; right: -3px;
+            height: 5px;
+            background: linear-gradient(90deg, #D69A2E, #F6E05E, #D69A2E);
+            background-size: 200% 100%;
+            animation: biblio-luz 3s ease-in-out infinite;
+            border-radius: 4px 4px 0 0;
+        }
+        .efemeride-badge-letras::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: rgba(44,24,16,0.15);
+            border-radius: 2px;
+        }
+        .efemeride-badge-letras i {
+            font-size: 36px;
+            color: #2C1810;
+        }
+        .efemeride-badge-letras span {
+            font-size: 7px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #2C1810;
+            letter-spacing: 0.25em;
+            opacity: 0.8;
+        }
+        .efemeride-badge-letras img {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+        }
         .efemeride-inner {
             min-height: 340px;
             display: flex;
@@ -787,7 +852,7 @@
             flex-direction: row;
             align-items: center;
             gap: 0;
-            padding: 0;
+            padding: 0 24px;
             min-height: 320px;
             position: relative;
             z-index: 2;
@@ -1134,21 +1199,25 @@
                 radial-gradient(ellipse at 30% 50%, rgba(255,107,107,0.05) 0%, transparent 60%),
                 radial-gradient(ellipse at 70% 50%, rgba(199,125,255,0.06) 0%, transparent 50%),
                 linear-gradient(135deg, rgba(45,27,105,0.92) 0%, rgba(60,35,130,0.85) 50%, rgba(45,27,105,0.92) 100%);
-            flex-direction: row;
-            align-items: center;
-            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            grid-template-rows: auto 1fr;
+            grid-template-areas:
+                "teito imaxe"
+                "contido imaxe";
+            padding: 10px 24px;
             gap: 0;
             color: #F8F7FF;
             position: relative;
         }
-        .efemeride-poesia .efemeride-contido {
-            flex: 1;
+        .efemeride-poesia .efemeride-teito {
+            grid-area: teito;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 50px 40px;
+            padding: 50px 40px 10px;
             gap: 6px;
         }
         .efemeride-poesia .efemeride-inner::before {
@@ -1251,8 +1320,18 @@
             color: rgba(248,247,255,0.35);
             font-size: 12px;
         }
+        .efemeride-poesia .efemeride-contido {
+            grid-area: contido;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px 40px 50px;
+            gap: 6px;
+        }
         .efemeride-poesia .efemeride-imaxe {
-            flex: 0 0 300px;
+            grid-area: imaxe;
             height: 340px;
             position: relative;
             overflow: hidden;
@@ -1285,7 +1364,7 @@
         .efemeride-poesia .efemeride-imaxe img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             object-position: center;
             display: block;
             transition: transform 0.6s ease;
@@ -1332,23 +1411,36 @@
                 radial-gradient(ellipse at 70% 50%, rgba(232,106,146,0.06) 0%, transparent 50%),
                 radial-gradient(ellipse at 30% 50%, rgba(255,215,0,0.03) 0%, transparent 40%),
                 linear-gradient(160deg, rgba(45,106,79,0.9) 0%, rgba(82,183,136,0.75) 50%, rgba(45,106,79,0.85) 100%);
-            flex-direction: row;
-            align-items: center;
-            padding: 0;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            grid-template-rows: auto 1fr;
+            grid-template-areas:
+                "teito imaxe"
+                "contido imaxe";
+            padding: 10px 24px;
             gap: 0;
-            min-height: 340px;
+            min-height: 360px;
             position: relative;
         }
-        .efemeride-rosalia .efemeride-contido {
-            flex: 1;
-            padding: 40px 36px;
+        .efemeride-rosalia .efemeride-teito {
+            grid-area: teito;
             display: flex;
             flex-direction: column;
             gap: 4px;
+            padding: 40px 36px 10px;
             color: #F0FFF4;
             position: relative;
             z-index: 2;
-            max-width: 60%;
+        }
+        .efemeride-rosalia .efemeride-contido {
+            grid-area: contido;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0 36px 40px;
+            color: #F0FFF4;
+            position: relative;
+            z-index: 2;
         }
         .efemeride-rosalia .efemeride-contido::before {
             font-family: 'Font Awesome 6 Free';
@@ -1404,7 +1496,7 @@
         .efemeride-rosalia .efemeride-descricion { color: rgba(240,255,244,0.75); font-size: 14px; }
         .efemeride-rosalia .efemeride-secundario { color: rgba(240,255,244,0.4); font-size: 13px; }
         .efemeride-rosalia .efemeride-imaxe {
-            flex: 0 0 340px;
+            grid-area: imaxe;
             height: 340px;
             position: relative;
             overflow: hidden;
@@ -1438,11 +1530,11 @@
         .efemeride-rosalia .efemeride-imaxe img {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            object-position: center 20%;
+            object-fit: contain;
+            object-position: center;
             display: block;
             transition: transform 0.6s ease;
-            filter: saturate(1.05) brightness(1.02);
+            filter: brightness(1.02) contrast(1.03);
         }
         .efemeride-rosalia:hover .efemeride-imaxe img {
             transform: scale(1.03);
@@ -1466,6 +1558,65 @@
         .efemeride-rosalia .efemeride-decor-estrela:nth-child(2) { top: 20%; right: 15%; animation-delay: 1s; }
         .efemeride-rosalia .efemeride-decor-estrela:nth-child(3) { bottom: 15%; left: 12%; animation-delay: 2s; }
         .efemeride-rosalia .efemeride-decor-estrela:nth-child(4) { bottom: 25%; right: 8%; animation-delay: 0.5s; }
+
+        .efemeride-ver-mais {
+            display: inline-block;
+            margin-top: 10px;
+            background: transparent;
+            border: 1px solid currentColor;
+            color: inherit;
+            opacity: 0.45;
+            padding: 3px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.06em;
+            line-height: 1.6;
+        }
+        .efemeride-ver-mais:hover { opacity: 1; }
+        .efemeride-ver-mais-line { display: inline-flex; align-items: center; gap: 8px; }
+        .efemeride-ver-mais-titulo { font-size: 12px; opacity: 0.55; font-weight: 500; letter-spacing: 0.04em; }
+        #modal-programa.visible { display: flex; }
+        #modal-programa .modal-contido { max-width: 580px; padding: 0; overflow: hidden; border: none; }
+        .modal-programa-wrap {
+            box-shadow: 0 12px 50px rgba(0,0,0,0.25);
+            border-radius: 12px;
+            background: var(--bg-superficie);
+        }
+        .modal-programa-cabezal {
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-secundaria) 100%);
+            color: #fff;
+            padding: 22px 28px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            position: relative;
+            overflow: hidden;
+        }
+        .modal-programa-cabezal::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+        .modal-programa-cabezal i { font-size: 24px; opacity: 0.85; position: relative; z-index: 1; }
+        .modal-programa-cabezal h2 { margin: 0; font-size: 18px; font-weight: 700; position: relative; z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        .modal-programa-wrap .modal-pechar { color: rgba(255,255,255,0.75); top: 18px; right: 18px; z-index: 2; background: rgba(0,0,0,0.12); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 18px; line-height: 1; }
+        .modal-programa-wrap .modal-pechar:hover { color: #fff; background: rgba(0,0,0,0.25); transform: none; }
+        .modal-programa-contido {
+            white-space: pre-line;
+            line-height: 1.9;
+            font-size: 15px;
+            color: var(--texto-primario);
+            padding: 28px 32px;
+            background: rgba(245,247,250,0.4);
+        }
 
         /* ============================================================
            DÍA DAS LETRAS GALEGAS — "GALICIA ETERNA"
@@ -1497,7 +1648,6 @@
     50% { box-shadow: 0 0 35px rgba(91,192,235,0.18), 0 0 60px rgba(255,255,255,0.04); }
 }
         .efemeride-letras {
-            background: linear-gradient(135deg, #48CAE4, #90E0EF, #CAF0F8);
             position: relative;
         }
         .efemeride-letras::after {
@@ -1512,73 +1662,85 @@
             z-index: 5;
         }
         .efemeride-letras .efemeride-inner {
-            background: rgba(255,255,255,0.75);
-            backdrop-filter: blur(8px);
             flex-direction: row;
             align-items: stretch;
-            padding: 0;
-            min-height: 320px;
+            padding: 12px 24px;
+            min-height: 340px;
             position: relative;
-        }
-        .efemeride-letras .efemeride-franxa {
-            width: 200px;
-            background: linear-gradient(160deg, #0077B6, #00B4D8, #48CAE4);
-            background-size: 200% auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 28px 16px;
-            gap: 4px;
-            z-index: 1;
-            position: relative;
-            border-right: 3px solid rgba(255,255,255,0.2);
-        }
-        .efemeride-letras .efemeride-franxa::after {
-            content: '';
-            position: absolute;
-            top: 0; bottom: 0; left: 100%;
-            width: 40px;
-            background: linear-gradient(90deg, #0077B6, transparent);
-        }
-        .efemeride-letras .efemeride-franxa::before {
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            content: '\f005';
-            position: absolute;
-            bottom: 12px; right: 14px;
-            font-size: 10px;
-            color: rgba(255,255,255,0.15);
-        }
-        .efemeride-letras .efemeride-franxa .efemeride-data {
-            color: #FFFFFF;
-            font-weight: 800;
-            letter-spacing: 0.2em;
-            font-size: 10px;
-            text-transform: uppercase;
-        }
-        .efemeride-letras .efemeride-franxa .efemeride-titulo {
-            font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
-            font-weight: 900;
-            text-transform: uppercase;
-            font-size: clamp(18px, 2.8vw, 30px);
-            color: #FFFFFF;
-            letter-spacing: 0.06em;
-            text-align: center;
-            line-height: 1.15;
-            text-shadow: 0 1px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
         .efemeride-letras .efemeride-textos {
+            position: relative;
+            z-index: 2;
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding: 36px 32px 36px 48px;
+            padding: 32px 24px 32px 20px;
             gap: 4px;
-            color: #03045E;
+        }
+        .efemeride-letras .efemeride-imaxe {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 55%;
             z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .efemeride-letras .efemeride-imaxe::before {
+            content: '';
+            position: absolute;
+            inset: 10px;
+            border: 2px solid rgba(255,215,0,0.15);
+            z-index: 2;
+            pointer-events: none;
+            border-radius: 4px;
+        }
+        .efemeride-letras .efemeride-imaxe::after {
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            content: '\f005';
+            position: absolute;
+            top: 16px; right: 20px;
+            font-size: 11px;
+            color: rgba(255,215,0,0.3);
+            z-index: 3;
+            animation: letras-brilho-celeste 3s ease-in-out infinite;
+        }
+        .efemeride-letras .efemeride-imaxe img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            max-height: 340px;
+            transition: transform 0.6s ease;
+            filter: saturate(1.05) brightness(1.02);
+        }
+        .efemeride-letras:hover .efemeride-imaxe img {
+            transform: scale(1.03);
+        }
+        .efemeride-letras .efemeride-imaxe .efemeride-imaxe-lente {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,215,0,0.03) 0%, transparent 40%, rgba(0,119,182,0.04) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .efemeride-badge-letras {
             position: relative;
-            animation: letras-aparecer-texto 0.6s ease-out;
+            left: auto;
+            top: auto;
+            flex: 0 0 auto;
+            align-self: center;
+            transform: perspective(800px) rotateY(-8deg);
+            margin: 10px 0 10px 12px;
+            z-index: 3;
+        }
+        .efemeride-badge-letras:hover {
+            transform: perspective(800px) rotateY(0deg);
         }
         .efemeride-letras .efemeride-textos .efemeride-etiqueta {
             color: rgba(0,119,182,0.6);
@@ -1598,6 +1760,7 @@
             line-height: 1.5;
             white-space: pre-line;
             border-radius: 0 4px 4px 0;
+            display: table;
             max-width: 85%;
         }
         .efemeride-letras .efemeride-textos .efemeride-descricion { color: rgba(3,4,94,0.7); font-size: 14px; }
@@ -1609,63 +1772,12 @@
             font-weight: 800;
             margin: 4px 0;
         }
-        .efemeride-letras .efemeride-imaxe {
-            flex: 0 0 320px;
-            height: 340px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
-            animation: letras-imaxe-brilho 4s ease-in-out infinite;
-        }
-        .efemeride-letras .efemeride-imaxe::before {
-            content: '';
-            position: absolute;
-            inset: 10px;
-            border: 2px solid rgba(255,215,0,0.15);
-            z-index: 2;
-            pointer-events: none;
-            border-radius: 4px;
-            box-shadow: 0 0 25px rgba(0,119,182,0.06), inset 0 0 20px rgba(255,215,0,0.02);
-        }
-        .efemeride-letras .efemeride-imaxe::after {
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            content: '\f005';
-            position: absolute;
-            top: 16px; right: 20px;
-            font-size: 11px;
-            color: rgba(255,215,0,0.3);
-            z-index: 3;
-            animation: letras-brilho-celeste 3s ease-in-out infinite;
-        }
-        .efemeride-letras .efemeride-imaxe img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center 20%;
-            display: block;
-            transition: transform 0.6s ease;
-            filter: saturate(1.05) brightness(1.02);
-        }
-        .efemeride-letras:hover .efemeride-imaxe img {
-            transform: scale(1.03);
-        }
-        .efemeride-letras .efemeride-imaxe .efemeride-imaxe-lente {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,215,0,0.03) 0%, transparent 40%, rgba(0,119,182,0.04) 100%);
-            z-index: 1;
-            pointer-events: none;
-        }
 
         /* === Responsive === */
         @media (max-width: 768px) {
             .efemeride-libro .efemeride-inner { flex-direction: column; min-height: auto; }
             .efemeride-libro .efemeride-decor {
-                width: 100%; min-height: 160px;
+                width: 100%; min-height: 160px; aspect-ratio: 16/9;
             }
             .efemeride-libro .efemeride-decor::before { inset: 8px; }
             .efemeride-libro .efemeride-decor::after { display: none; }
@@ -1679,34 +1791,98 @@
             .efemeride-bibliotecas .efemeride-badge i { font-size: 26px; }
             .efemeride-bibliotecas .efemeride-badge::before { display: none; }
             .efemeride-bibliotecas .efemeride-destacado { max-width: 100%; }
-            .efemeride-poesia .efemeride-inner { flex-direction: column; }
-            .efemeride-poesia .efemeride-contido { padding: 36px 20px; }
-            .efemeride-poesia::after { display: none; }
-            .efemeride-poesia .efemeride-destacado { padding: 12px 16px; font-size: 16px; max-width: 100%; }
-            .efemeride-poesia .efemeride-descricion { max-width: 100%; }
-            .efemeride-poesia .efemeride-imaxe { flex: 0 0 240px; width: 100%; height: 240px; }
-            .efemeride-poesia .efemeride-imaxe::before { inset: 8px; }
-            .efemeride-poesia .efemeride-imaxe::after { display: none; }
-            .efemeride-rosalia .efemeride-inner { flex-direction: column-reverse; min-height: auto; }
-            .efemeride-rosalia .efemeride-contido { max-width: 100%; padding: 28px 20px; }
-            .efemeride-rosalia .efemeride-imaxe { flex: 0 0 240px; width: 100%; height: 240px; }
-            .efemeride-rosalia .efemeride-destacado { max-width: 100%; }
-            .efemeride-rosalia .efemeride-decor-estrela { display: none; }
-            .efemeride-letras .efemeride-inner { flex-direction: column-reverse; }
-            .efemeride-letras .efemeride-franxa {
-                width: 100%;
-                padding: 20px;
-                border-right: none;
-                border-bottom: 3px solid rgba(0,119,182,0.3);
+            .efemeride-poesia .efemeride-inner {
+                display: grid;
+                grid-template-columns: 1fr 35%;
+                grid-template-areas: "teito teito" "contido imaxe";
+                padding: 12px;
+                gap: 8px;
+                min-height: auto;
             }
-            .efemeride-letras .efemeride-franxa::after { display: none; }
-            .efemeride-letras .efemeride-franxa::before { display: none; }
-            .efemeride-letras .efemeride-textos { padding: 24px 20px; }
+            .efemeride-poesia .efemeride-teito { grid-area: teito; padding: 12px 10px 4px; }
+            .efemeride-poesia .efemeride-contido { grid-area: contido; padding: 4px 10px 16px; }
+            .efemeride-poesia .efemeride-imaxe { grid-area: imaxe; align-self: stretch; height: auto; }
+            .efemeride-poesia::after { display: none; }
+            .efemeride-poesia .efemeride-destacado { padding: 8px 10px; font-size: 14px; max-width: 100%; }
+            .efemeride-poesia .efemeride-descricion { max-width: 100%; font-size: 13px; }
+            .efemeride-poesia .efemeride-imaxe::before { inset: 5px; }
+            .efemeride-poesia .efemeride-imaxe::after { display: none; }
+            .efemeride-poesia .efemeride-titulo { font-size: clamp(18px, 4.5vw, 26px); }
+            .efemeride-rosalia .efemeride-inner {
+                display: flex;
+                flex-direction: column;
+                position: relative;
+                padding: 12px;
+                min-height: auto;
+                gap: 0;
+            }
+            .efemeride-rosalia .efemeride-teito {
+                position: relative;
+                z-index: 2;
+                padding: 12px 0 4px;
+                text-align: center;
+                align-items: center;
+            }
+            .efemeride-rosalia .efemeride-contido {
+                position: relative;
+                z-index: 2;
+                padding: 4px 0 16px;
+            }
+            .efemeride-rosalia .efemeride-imaxe {
+                position: absolute;
+                right: 6px;
+                top: 50%;
+                transform: translateY(-50%);
+                bottom: auto;
+                width: 26%;
+                max-height: 200px;
+                height: auto;
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .efemeride-rosalia .efemeride-imaxe::before { inset: 3px; }
+            .efemeride-rosalia .efemeride-imaxe img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+            .efemeride-rosalia .efemeride-destacado { max-width: 100%; line-height: 1.3; }
+            .efemeride-rosalia .efemeride-contido::before { display: none; }
+            .efemeride-rosalia .efemeride-decor-estrela { display: none; }
+            .efemeride-rosalia .efemeride-titulo { font-size: clamp(18px, 4.5vw, 26px); }
+            .efemeride-letras .efemeride-inner {
+                display: grid;
+                grid-template-columns: 1fr 48%;
+                grid-template-areas: "badge badge" "textos imaxe";
+                padding: 12px;
+                gap: 0;
+                min-height: auto;
+            }
+            .efemeride-badge-letras { grid-area: badge; justify-self: center; margin: 0 0 6px; transform: none; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
+            .efemeride-badge-letras img { max-width: 90% !important; max-height: 90% !important; width: auto; height: auto; object-fit: contain; }
+            .efemeride-badge-letras i { font-size: 24px; }
+            .efemeride-letras .efemeride-textos { grid-area: textos; padding: 10px; }
             .efemeride-letras .efemeride-textos .efemeride-destacado { max-width: 100%; }
-            .efemeride-letras .efemeride-imaxe { flex: 0 0 240px; width: 100%; height: 240px; }
-            .efemeride-letras .efemeride-imaxe::before { inset: 8px; }
+            .efemeride-letras .efemeride-imaxe { grid-area: imaxe; align-self: center; height: auto; max-height: 180px; }
+            .efemeride-letras .efemeride-imaxe::before { inset: 3px; }
             .efemeride-letras .efemeride-imaxe::after { display: none; }
-            .efemeride-destacado { font-size: 15px; padding: 10px 14px; }
+            .efemeride-destacado { font-size: 14px; padding: 8px 10px; }
+        }
+        @media (min-width: 1200px) {
+            .efemeride-poesia .efemeride-destacado { max-width: 800px; font-size: 22px; padding: 20px 36px; }
+            .efemeride-rosalia .efemeride-contido { max-width: 70%; }
+            .efemeride-rosalia .efemeride-destacado { font-size: 20px; max-width: 95%; }
+            .efemeride-letras .efemeride-textos .efemeride-destacado { max-width: 75%; font-size: 18px; }
+            .efemeride-titulo { font-size: clamp(36px, 4vw, 56px); }
+        }
+        @media (max-width: 480px) {
+            .efemeride .efemeride-inner { min-height: auto; padding: 8px; gap: 4px; }
+            .efemeride-poesia .efemeride-inner { grid-template-columns: 1fr 30%; gap: 6px; padding: 8px; }
+            .efemeride-rosalia .efemeride-imaxe { width: 24%; max-height: 130px; }
+            .efemeride-letras .efemeride-inner { grid-template-columns: 1fr 42%; gap: 0; padding: 8px; }
+            .efemeride-letras .efemeride-textos { padding: 6px; }
         }
 
         .seccion-titulo-liña {
@@ -2023,7 +2199,6 @@
             scrollbar-width: none;
             cursor: grab;
             user-select: none;
-            touch-action: pan-x;
         }
 
         .carrusel-track:active {
@@ -3605,6 +3780,20 @@
         </div>
     </div>
 
+    <!-- ============================================================
+         MODAL DE PROGRAMA (actividades das efemérides)
+         ============================================================ -->
+    <div class="modal-overlay" id="modal-programa">
+        <div class="modal-contido modal-programa-wrap">
+            <button class="modal-pechar" id="modal-programa-pechar">&times;</button>
+            <div class="modal-programa-cabezal">
+                <i class="fas fa-calendar-alt"></i>
+                <h2 id="modal-programa-titulo">Programa de actividades</h2>
+            </div>
+            <div id="modal-programa-contido" class="modal-programa-contido"></div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
 
     <!-- ============================================================
@@ -3900,10 +4089,10 @@
             if (_API_URL) {
                 try {
                     const r = await Promise.all([
-                        fetchSheet('configuracion'),
-                        fetchSheet('contido'),
-                        fetchSheet('seccions'),
-                        fetchSheet('galeria')
+                        fetch(apiURL('configuracion')),
+                        fetch(apiURL('contido')),
+                        fetch(apiURL('seccions')),
+                        fetch(apiURL('galeria'))
                     ]);
                     if (r.every(x => x.ok)) {
                         libros = []; eventos = [];
@@ -4075,6 +4264,9 @@
             container.innerHTML = html;
 
             /* evento hero debaixo se hai */
+            var stripVello = container.parentElement.querySelector('.hero-evento-strip');
+            if (stripVello) stripVello.remove();
+
             if (heroEvento) {
                 var eventoImaxe = heroEvento.imaxe || '';
                 var strip = document.createElement('div');
@@ -4132,16 +4324,13 @@
                     case 'contacto':
                         html += xerarContacto(secc);
                         break;
-                    case 'bibliobenestar':
-                        html += xerarSeccionFiltros(secc, 'bibliobenestar');
-                        break;
-                    case 'memoria':
-                        html += xerarSeccionFiltros(secc, 'memoria');
-                        break;
-                    case 'planetario':
-                        html += xerarSeccionFiltros(secc, 'planetario');
-                        break;
-                    case 'preferidos':
+            case 'bibliobenestar':
+            case 'memoria':
+            case 'planetario':
+            case 'subapartados':
+                html += xerarSeccionFiltros(secc, secc.tipo_seccion);
+                break;
+            case 'preferidos':
                         html += xerarPreferidos(secc);
                         break;
                     case 'efemeride':
@@ -4254,7 +4443,12 @@
             }
 
             const hoxe = new Date();
+            var visibles = {};
+            document.querySelectorAll('.cartel-evento, .card-menor').forEach(function (el) {
+                try { var ev = JSON.parse(el.dataset.evento); visibles[ev.titulo + '|' + ev.data] = true; } catch(e) {}
+            });
             let lista = eventos.filter(function (e) {
+                if (visibles[e.titulo + '|' + e.data]) return false;
                 const d = parseDate(e.data);
                 return tipo === 'futuros' ? d >= hoxe : d < hoxe;
             }).sort(function (a, b) { return parseDate(a.data) - parseDate(b.data); });
@@ -4401,6 +4595,7 @@
             var clubData = secc.club_data || 'Próxima sesión: 24 de Maio · 16:30h';
             var lecturaTitulo = secc.club_lectura_titulo || 'As malas mulleres';
             var lecturaAutor = secc.club_lectura_autor || 'Marilar Aleixandre';
+            var lecturaPortada = secc.club_lectura_portada || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80';
             var botonTexto = secc.club_boton_texto || 'Incribirme';
             var recursosHTML = recursos.map(function (r) {
                 var svgIcon = '';
@@ -4424,10 +4619,12 @@
                 + '<svg width="28" height="28" fill="none" stroke="var(--primaria)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>'
                 + '<h3 style="font-size:22px;margin:0;">Club de Lectura "A Pinguela"</h3></div>'
                 + '<p style="color:var(--cor-texto-mutado);margin-bottom:16px;font-size:14px;">' + descricion + '</p>'
-                + '<div class="card-menor" style="margin-bottom:16px;">'
+                + '<div class="card-menor" style="margin-bottom:16px;background-image:url(\'' + escAttr(lecturaPortada) + '\');background-size:cover;background-position:center;position:relative;">'
+                + '<div class="card-menor-overlay"></div>'
+                + '<div class="card-menor-contido" style="padding:20px;">'
                 + '<span class="card-menor-data">' + clubData + '</span>'
                 + '<h4 style="font-size:15px;margin-top:4px;">Lectura: "' + lecturaTitulo + '" de ' + lecturaAutor + '</h4>'
-                + '</div>'
+                + '</div></div>'
                 + '<a href="#seccion-contacto" class="btn-principal" style="padding:10px 24px;font-size:14px;">' + botonTexto + '</a>'
                 + '</div>'
                 + '<div>'
@@ -4866,6 +5063,21 @@
             var textoDestacado = secc.efemeride_texto_destacado || '';
             var textoSecundario = secc.efemeride_texto_secundario || '';
             var imagemFundo = secc.efemeride_imaxe || '';
+            var programa = secc.efemeride_programa || '';
+            var programaTitulo = secc.efemeride_programa_titulo || '';
+
+            function btnProg(tituloAttr, centro) {
+                if (!programa) return '';
+                var tituloHtml = programaTitulo ? '<span class="efemeride-ver-mais-titulo">' + esc(programaTitulo) + '</span>' : '';
+                var btnHtml = '<button class="efemeride-ver-mais" data-programa="' + escAttr(programa) + '" data-titulo="' + escAttr(programaTitulo) + '">Ver máis</button>';
+                var liña = tituloHtml ? '<span class="efemeride-ver-mais-line">' + tituloHtml + btnHtml + '</span>' : btnHtml;
+                if (centro) return '<div style="text-align:center;margin-top:10px;">' + liña + '</div>';
+                if (tituloAttr === 'esq') return '<div style="align-self:flex-start;">' + liña + '</div>';
+                return liña;
+            }
+            var progBtn = btnProg('', false);
+            var progBtnCentro = btnProg('centro', true);
+            var progBtnEsq = btnProg('esq', false);
 
             var variantes = {
                 dia_do_libro: {
@@ -4945,14 +5157,18 @@
 
             if (variante === 'dia_das_bibliotecas') {
                 var biblioImg = escAttr(imagemFundo || 'imaxes/bibliotecas.png');
+                var logoBiblio = escAttr(secc.efemeride_logo || 'imaxes/logo_b.png');
+                var badgeInner = logoBiblio
+                    ? '<img src="' + logoBiblio + '" alt="Celebra" style="max-width:80%;max-height:80%;object-fit:contain;">'
+                    : '<i class="fas ' + v.iconaClase + '"></i><span>' + v.etiqueta.split(' ')[0] + '</span>';
                 return '<section class="seccion efemeride efemeride-bibliotecas" id="seccion-efemeride-' + (secc.orde || '0') + '" style="background-image:url(\'' + biblioImg + '\');background-size:cover;background-position:center;">'
                     + '<div class="efemeride-fondo-overlay"></div>'
                     + '<div class="efemeride-inner">'
-                    + '<div class="efemeride-badge"><i class="fas ' + v.iconaClase + '"></i><span>' + v.etiqueta.split(' ')[0] + '</span></div>'
+                    + '<div class="efemeride-badge">' + badgeInner + '</div>'
                     + '<div class="efemeride-textos">'
                     + db
                     + '<h2 class="efemeride-titulo">' + esc(titulo) + '</h2>'
-                    + et + desc + dest + secu
+                    + et + desc + dest + secu + progBtnCentro
                     + '</div></div></section>';
             }
 
@@ -4960,10 +5176,13 @@
                 var poesiaImg = escAttr(imagemFundo || 'imaxes/poesia.png');
                 return '<section class="seccion efemeride efemeride-poesia" id="seccion-efemeride-' + (secc.orde || '0') + '">'
                     + '<div class="efemeride-inner">'
-                    + '<div class="efemeride-contido">'
+                    + '<div class="efemeride-teito">'
                     + db
                     + '<h2 class="efemeride-titulo">' + esc(titulo) + '</h2>'
-                    + et + desc + dest + secu
+                    + et
+                    + '</div>'
+                    + '<div class="efemeride-contido">'
+                    + desc + dest + secu + progBtn
                     + '</div>'
                     + '<div class="efemeride-imaxe">'
                     + '<img src="' + poesiaImg + '" alt="Día da Poesía">'
@@ -4980,11 +5199,13 @@
                     + '<i class="fas fa-star efemeride-decor-estrela"></i>'
                     + '<i class="fas fa-star efemeride-decor-estrela"></i>'
                     + '<i class="fas fa-star efemeride-decor-estrela"></i>'
-                    + '<div class="efemeride-contido">'
+                    + '<div class="efemeride-teito">'
                     + db
                     + '<span class="efemeride-etiqueta">' + esc(secc.efemeride_etiqueta || v.etiqueta) + '</span>'
                     + '<h2 class="efemeride-titulo">' + esc(titulo) + '</h2>'
-                    + desc + dest + secu
+                    + '</div>'
+                    + '<div class="efemeride-contido">'
+                    + desc + dest + secu + progBtnEsq
                     + '</div>'
                     + '<div class="efemeride-imaxe">'
                     + '<img src="' + rosaliaSrc + '" alt="Rosalía de Castro">'
@@ -4994,14 +5215,17 @@
             }
 
             var letrasImg = escAttr(imagemFundo || 'imaxes/letras.png');
+            var logoLetras = escAttr(secc.efemeride_logo || 'imaxes/rag.png');
+            var badgeLetras = logoLetras
+                ? '<div class="efemeride-badge efemeride-badge-letras"><img src="' + logoLetras + '" alt="Celebra" style="max-width:80%;max-height:80%;object-fit:contain;"></div>'
+                : '<div class="efemeride-badge efemeride-badge-letras"><i class="fas fa-trophy"></i><span>CELEBRA</span></div>';
             return '<section class="seccion efemeride efemeride-letras" id="seccion-efemeride-' + (secc.orde || '0') + '">'
                 + '<div class="efemeride-inner">'
-                + '<div class="efemeride-franxa">'
-                + db
-                + '<h2 class="efemeride-titulo" style="font-size:clamp(16px,2.4vw,24px);">' + titulo + '</h2>'
-                + '</div>'
+                + badgeLetras
                 + '<div class="efemeride-textos">'
-                + et + '<h3 class="efemeride-titulo">' + titulo + '</h3>' + desc + dest + secu
+                + db
+                + '<h2 class="efemeride-titulo">' + esc(titulo) + '</h2>'
+                + et + desc + dest + secu + progBtnEsq
                 + '</div>'
                 + '<div class="efemeride-imaxe">'
                 + '<img src="' + letrasImg + '" alt="Letras Galegas">'
@@ -5051,11 +5275,6 @@
                     trackAtual.scrollLeft = scrollLeft - (x - startX) * 1.5;
                     e.preventDefault();
                 });
-                window.addEventListener('touchmove', function (e) {
-                    if (!isDown || !trackAtual) return;
-                    var x = e.touches[0].pageX - trackAtual.offsetLeft;
-                    trackAtual.scrollLeft = scrollLeft - (x - startX) * 1.5;
-                }, { passive: true });
             }
             document.querySelectorAll('.carrusel-track').forEach(function (track) {
                 track.addEventListener('mousedown', function (e) {
@@ -5066,13 +5285,6 @@
                     scrollLeft = track.scrollLeft;
                     e.preventDefault();
                 });
-                track.addEventListener('touchstart', function (e) {
-                    isDown = true;
-                    trackAtual = track;
-                    track.style.cursor = 'grabbing';
-                    startX = e.touches[0].pageX - track.offsetLeft;
-                    scrollLeft = track.scrollLeft;
-                }, { passive: true });
             });
             document.querySelectorAll('.carrusel-izq, .carrusel-der').forEach(function (btn) {
                 btn.addEventListener('click', function () {
@@ -5116,7 +5328,38 @@
             if (pechar && !pechar.dataset._ligado) { pechar.addEventListener('click', pecharModal); pechar.dataset._ligado = '1'; }
             var overlay = document.getElementById('modal-libro');
             if (overlay && !overlay.dataset._ligado) { overlay.addEventListener('click', function (e) { if (e.target === e.currentTarget) pecharModal(); }); overlay.dataset._ligado = '1'; }
-            if (!document.body.dataset._modalEscape) { document.addEventListener('keydown', function (e) { if (e.key === 'Escape') pecharModal(); }); document.body.dataset._modalEscape = '1'; }
+            if (!document.body.dataset._modalEscape) { document.addEventListener('keydown', function (e) { if (e.key === 'Escape') pecharModal(); if (e.key === 'Escape') pecharModalPrograma(); }); document.body.dataset._modalEscape = '1'; }
+
+            /* Modal programa */
+            var pp = document.getElementById('modal-programa-pechar');
+            if (pp && !pp.dataset._ligado) { pp.addEventListener('click', pecharModalPrograma); pp.dataset._ligado = '1'; }
+            var po = document.getElementById('modal-programa');
+            if (po && !po.dataset._ligado) { po.addEventListener('click', function (e) { if (e.target === e.currentTarget) pecharModalPrograma(); }); po.dataset._ligado = '1'; }
+            if (!document.body.dataset._progAberto) {
+                document.addEventListener('click', function (e) {
+                    var btn = e.target.closest('.efemeride-ver-mais');
+                    if (btn && btn.dataset.programa) abrirModalPrograma(btn.dataset.programa, btn.dataset.titulo);
+                });
+                document.body.dataset._progAberto = '1';
+            }
+        }
+
+        function abrirModalPrograma(contenido, titulo) {
+            var modal = document.getElementById('modal-programa');
+            var body = document.getElementById('modal-programa-contido');
+            var tituloEl = document.getElementById('modal-programa-titulo');
+            if (!modal || !body) return;
+            body.innerHTML = contenido;
+            if (tituloEl) tituloEl.textContent = titulo || 'Programa de actividades';
+            modal.classList.add('visible');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function pecharModalPrograma() {
+            var modal = document.getElementById('modal-programa');
+            if (!modal) return;
+            modal.classList.remove('visible');
+            document.body.style.overflow = '';
         }
 
         /* -------------------------------------------------------
