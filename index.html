@@ -3616,6 +3616,7 @@
     <script> 
         window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
+
     <!-- ============================================================
          JAVASCRIPT — LÓXICA COMPLETA DA APLICACIÓN
          ============================================================ -->
@@ -3747,10 +3748,38 @@
         }
 
         /* -------------------------------------------------------
-           cargarDatos() — fai fetch dos 3 CSVs en paralelo, parsea e
-           chama a renderizarTodo(). Se algo falla, usa exemplos.
+           cargarDatos() — fai fetch dos CSVs con caché localStorage
+           Primeiro mostra datos cacheados (se hai), despois actualiza
+           en segundo plano. Apps Script tarda 3-5s en cold start.
            ------------------------------------------------------- */
+        function cargarCache() {
+            try {
+                const cache = JSON.parse(localStorage.getItem('biblio_cache') || '{}');
+                if (cache.ts && Date.now() - cache.ts < 3600000) { // 1 hora
+                    if (cache.cfg) configuracion = cache.cfg;
+                    if (cache.libros) libros = cache.libros;
+                    if (cache.eventos) eventos = cache.eventos;
+                    if (cache.seccions) seccions = cache.seccions;
+                    if (libros.length || eventos.length || seccions.length) return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+        function gardarCache() {
+            try {
+                localStorage.setItem('biblio_cache', JSON.stringify({
+                    ts: Date.now(),
+                    cfg: configuracion,
+                    libros: libros,
+                    eventos: eventos,
+                    seccions: seccions
+                }));
+            } catch (e) {}
+        }
+
         async function cargarDatos() {
+            if (cargarCache()) renderizarTodo();
+
             try {
                 const [rCfg, rCont, rSec, rGal] = await Promise.all([
                     fetch(apiURL('configuracion')),
@@ -3832,6 +3861,7 @@
                     seccions = [{ tipo_seccion: 'carrusel', titulo: 'Recomendacións', filtro_categoria: '', orde: '1', activo: 'SI' }];
                 }
 
+                gardarCache();
                 renderizarTodo();
             } catch (e) {
                 console.error(e);
@@ -3885,12 +3915,16 @@
         function parseDate(str) {
             if (!str) return new Date(0);
             try {
+                str = str.trim();
+                const m = str.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+                if (m) return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+                if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return new Date(str + 'T00:00:00');
                 const p = str.split(' ');
                 const d = parseInt(p[0]);
-                const m = p[1];
+                const mesTxt = p[1];
                 const a = parseInt(p[2] || new Date().getFullYear());
                 const meses = { Xan: 0, Feb: 1, Mar: 2, Abr: 3, Mai: 4, Xuñ: 5, Xul: 6, Ago: 7, Set: 8, Out: 9, Nov: 10, Dec: 11 };
-                return new Date(a, meses[m] || 0, d);
+                return new Date(a, meses[mesTxt] || 0, d);
             } catch (e) { return new Date(0); }
         }
 
