@@ -1148,7 +1148,7 @@
     </div>
 
     <script>
-        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        window._SHEETS_KEY = 'AQUI_A_TUA_API_KEY';
         window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
 
@@ -1447,8 +1447,11 @@
                     efemeride_data: row.efemeride_data || '',
                     efemeride_etiqueta: row.efemeride_etiqueta || '',
                     efemeride_texto_destacado: row.efemeride_texto_destacado || '',
-                    efemeride_texto_secundario: row.efemeride_texto_secundario || '',
-                    efemeride_imaxe: row.efemeride_imaxe || ''
+                efemeride_texto_secundario: row.efemeride_texto_secundario || '',
+                efemeride_imaxe: row.efemeride_imaxe || '',
+                efemeride_logo: row.efemeride_logo || '',
+                efemeride_programa: row.efemeride_programa || '',
+                efemeride_programa_titulo: row.efemeride_programa_titulo || ''
                 };
             });
             renderizarSeccions();
@@ -1776,6 +1779,7 @@
                 contacto: 'Contacto', preferidos: 'Favoritos', libro_mes: 'Lectura do Mes',
                 carrusel: 'Carrusel', club: 'Club de Lectura',
                 bibliobenestar: 'BiblioBenestar', memoria: 'Memoria', planetario: 'Planetario',
+                subapartados: 'Subapartados',
                 efemeride: 'Efeméride'
             };
 
@@ -1843,7 +1847,7 @@
 
                     var eImborrable = ['eventos', 'contacto', 'bibliobenestar', 'memoria', 'planetario', 'normas', 'club', 'galeria', 'preferidos'].indexOf(sec.tipo_seccion) > -1
                         && seccions.findIndex(function (s) { return s.tipo_seccion === sec.tipo_seccion; }) === idx;
-                    var eSubapartados = sec.tipo_seccion === 'bibliobenestar' || sec.tipo_seccion === 'memoria' || sec.tipo_seccion === 'planetario';
+                    var eSubapartados = sec.tipo_seccion === 'bibliobenestar' || sec.tipo_seccion === 'memoria' || sec.tipo_seccion === 'planetario' || sec.tipo_seccion === 'subapartados';
                     var eCarrusel = sec.tipo_seccion === 'carrusel';
                     var eClub = sec.tipo_seccion === 'club';
                     var eEfemeride = sec.tipo_seccion === 'efemeride';
@@ -1861,6 +1865,7 @@
                         + '<option value="bibliobenestar"' + (sec.tipo_seccion === 'bibliobenestar' ? ' selected' : '') + '>BiblioBenestar</option>'
                         + '<option value="memoria"' + (sec.tipo_seccion === 'memoria' ? ' selected' : '') + '>Memoria</option>'
                         + '<option value="planetario"' + (sec.tipo_seccion === 'planetario' ? ' selected' : '') + '>Planetario</option>'
+                        + '<option value="subapartados"' + (sec.tipo_seccion === 'subapartados' ? ' selected' : '') + '>Subapartados</option>'
                         + '<option value="efemeride"' + (sec.tipo_seccion === 'efemeride' ? ' selected' : '') + '>Efeméride</option>'
                         + '</select></div>'
                         + (eCarrusel ? '<div class="editable-field"><label>Categoría</label>' + selectCategorias('filtro_categoria', sec.filtro_categoria || '') + '</div>'
@@ -1954,7 +1959,10 @@
                                 + '<div class="editable-field"><label>Descrición</label><textarea data-campo="efemeride_descricion" data-index="' + idx + '" data-tipo="seccion" placeholder="Descrición..." style="width:100%;min-height:50px;resize:vertical;">' + (sec.efemeride_descricion || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>'
                                 + '<div class="editable-field"><label>Texto destacado / Poema</label><textarea data-campo="efemeride_texto_destacado" data-index="' + idx + '" data-tipo="seccion" placeholder="Frase principal ou estrofa de poema" style="width:100%;min-height:80px;resize:vertical;">' + (sec.efemeride_texto_destacado || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>'
                                 + '<div class="editable-field"><label>Texto secundario</label><input type="text" value="' + (sec.efemeride_texto_secundario || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_texto_secundario" data-index="' + idx + '" data-tipo="seccion" placeholder="Texto adicional" /></div>'
-                                + '<div class="editable-field"><label>Imaxe (opcional)</label><input type="text" value="' + (sec.efemeride_imaxe || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_imaxe" data-index="' + idx + '" data-tipo="seccion" placeholder="URL da imaxe (deixar baleiro para usar por defecto)" /></div>'
+                                + '<div class="editable-field"><label>Imaxe principal (opcional)</label><input type="text" value="' + (sec.efemeride_imaxe || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_imaxe" data-index="' + idx + '" data-tipo="seccion" placeholder="URL da foto (ex: homenaxeado) — baleiro = por defecto" /></div>'
+                                + '<div class="editable-field"><label>Logo cadrado ouro (opcional)</label><input type="text" value="' + (sec.efemeride_logo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_logo" data-index="' + idx + '" data-tipo="seccion" placeholder="URL do logo — baleiro = rag.png (Letras) / logo_b.png (outros)" /></div>'
+                                + '<div class="editable-field"><label>Título do modal (opcional)</label><input type="text" value="' + (sec.efemeride_programa_titulo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_programa_titulo" data-index="' + idx + '" data-tipo="seccion" placeholder="Programa de actividades" /></div>'
+                                + '<div class="editable-field"><label>Programa de actividades</label><textarea data-campo="efemeride_programa" data-index="' + idx + '" data-tipo="seccion" placeholder="Detalles do programa (saltos de liña, texto formatado...)" style="width:100%;min-height:80px;resize:vertical;">' + (sec.efemeride_programa || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>'
                                 + '</div>';
                         }() : '')
                         + '</div>'
@@ -1986,7 +1994,7 @@
                         if (campo === 'data' && this.type === 'date') {
                             valor = formatDateFromInput(this.value);
                         }
-                        if (campo === 'efemeride_imaxe') valor = converterURLDrive(valor);
+                        if (campo === 'efemeride_imaxe' || campo === 'efemeride_logo') valor = converterURLDrive(valor);
                         var arr = tipo === 'libro' ? contido.filter(function (i) { return i.tipo === 'libro'; }) :
                             tipo === 'evento' ? contido.filter(function (i) { return i.tipo === 'evento'; }) :
                             tipo === 'seccion' ? seccions : [];
@@ -2335,7 +2343,7 @@
             var cabeceirasSec = cabeceirasSeccions.length ? cabeceirasSeccions : [
                 'tipo_seccion', 'titulo', 'filtro_categoria', 'filtro_categoria2', 'idioma', 'etiqueta', 'orde', 'activo',
                 'club_descricion', 'club_data', 'club_lectura_titulo', 'club_lectura_autor', 'club_boton_texto',
-                'efemeride_variante', 'efemeride_data', 'efemeride_etiqueta', 'efemeride_descricion', 'efemeride_texto_destacado', 'efemeride_texto_secundario', 'efemeride_imaxe'
+                'efemeride_variante', 'efemeride_data', 'efemeride_etiqueta', 'efemeride_descricion', 'efemeride_texto_destacado', 'efemeride_texto_secundario', 'efemeride_imaxe', 'efemeride_logo'
             ];
             var seccionsCSV = objectToCSV(cabeceirasSec, seccions);
 
@@ -2539,7 +2547,7 @@
                 + 'libro,A sombra do vento,"Misterio en Barcelona.",Novela histórica,https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400&q=80,,,Carlos Ruiz Zafón,16+,#,,NON,,,Clásico,SI,\n'
                 + 'evento,Encontro literario con Ledicia Costas,,Obradoiro,https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80,12 Xuño 2026,11:30h,Ledicia Costas,,,,,SI,,,,';
 
-            var seccionsCSV = 'tipo_seccion,titulo,filtro_categoria,filtro_categoria2,idioma,etiqueta,orde,activo,club_descricion,club_data,club_lectura_titulo,club_lectura_autor,club_boton_texto,efemeride_variante,efemeride_descricion,efemeride_texto_destacado,efemeride_texto_secundario,efemeride_imaxe\n'
+            var seccionsCSV = 'tipo_seccion,titulo,filtro_categoria,filtro_categoria2,idioma,etiqueta,orde,activo,club_descricion,club_data,club_lectura_titulo,club_lectura_autor,club_boton_texto,efemeride_variante,efemeride_descricion,efemeride_texto_destacado,efemeride_texto_secundario,efemeride_imaxe,efemeride_logo,efemeride_programa,efemeride_programa_titulo\n'
                 + 'eventos,Axenda Cultural,,,,1,SI,,,,,,,,,,,,,,,\n'
                 + 'carrusel,Novas Adquisicións,,,,2,SI,,,,,,,,,,,,,,,\n'
                 + 'carrusel,Recomendados polos profes,,,,3,SI,,,,,,,,,,,,,,,\n'
@@ -2548,9 +2556,10 @@
                 + 'normas,Normas de Préstamo,,,,6,SI,,,,,,,,,,,,,,,\n'
                 + 'galeria,Galería Visual,,,,7,SI,,,,,,,,,,,,,,,\n'
                 + 'contacto,Contacto e Formulario,,,,8,SI,,,,,,,,,,,,,,,\n'
-                + 'efemeride,Día do Libro,,,,21,SI,,,,,,,,,,,dia_do_libro,"Celebramos o Día do Libro cunha selección especial de lecturas.","«Os libros son espellos: neles vemos reflexado o que somos».","Todo o mes de abril, exposición temática na biblioteca.",\n'
-                + 'efemeride,Día das Letras Galegas,,,,22,SI,,,,,,,,,,,dia_das_letras,"Homenaxe á nosa lingua e á súa literatura.","«A nosa fala é o noso mundo. Coidémola, celebrémola, compartámola.»","Actividades especiais durante a semana das Letras.",';
-
+                + 'efemeride,Día da Poesía,,,,21,SI,,,,,,,,,,,dia_da_poesia,"A poesía invade cada recuncho da biblioteca.","«A poesia é a voz do que non ten nome»","Declamacións do alumnado.",,,"🕐 Recital poético — 10:00h<br>✍️ Obradoiro de haikus — 12:00h<br>🎭 Encontro con poeta local — 18:00h<br>🖼️ Exposición de poesía visual — todo o día","Poesía na Biblioteca"\n'
+                + 'efemeride,Mes de Rosalía,,,,22,SI,,,,,,,,,,,mes_de_rosalia,"Homenaxe á nosa poeta máis universal.","«Non teño, non, quen me defenda se non a miña garganta.»,","Lectura continuada da obra rosaliana.",,,"📖 Lectura continuada — 5 de febreiro<br>🌿 Obradoiro de poesía — 8 de marzo<br>🚶 Ruta literaria — 12 de abril<br>🌊 Exposición «Rosalía e o mar» — maio","Actos Rosalía"\n'
+                + 'efemeride,Día das Letras Galegas,,,,23,SI,,,,,,,,,,,dia_das_letras,"Homenaxe á nosa lingua e á súa literatura.","«A nosa fala é o noso mundo. Coidémola, celebrémola, compartámola.»","Actividades durante a semana das Letras.",,,"🎤 Recital poético — alumnado 4º ESO<br>🎨 Obradoiro de ilustración de carteis<br>📚 Exposición traballos sobre Castelao","Semana das Letras"\n'
+                + 'efemeride,Día do Libro,,,,,25,SI,,,,,,dia_do_libro,"Celebramos o Día do Libro con lecturas especiais.","«Os libros son espellos: neles vemos reflexado o que somos».","Todo o mes de abril, exposición temática.",,,,,';
             var galeriaCSV = 'directorio,titulo,descricion,url\n'
                 + 'Maratón de lectura,Maratón de lectura,"Alumnado compartindo textos.",https://images.unsplash.com/photo-1526244434298-88fc74916d95?auto=format&fit=crop&w=600&q=80\n'
                 + 'Maratón de lectura,"Novos títulos manga","O andel máis concorrido.",https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80';
