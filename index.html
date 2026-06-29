@@ -3542,6 +3542,15 @@
         </header>
     </div>
 
+    <div id="loading-screen" style="position:fixed;inset:0;background:var(--bg-principal);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.4s ease;">
+        <img src="imaxes/a_biblio.png" alt="Cargando" style="height:60px;margin-bottom:16px;opacity:0.7;">
+        <div style="width:36px;height:36px;border:3px solid var(--bordo-fino);border-top-color:var(--primaria);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+        <p style="margin-top:16px;font-size:14px;color:var(--cor-texto-mutado);">Cargando datos...</p>
+    </div>
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
     <!-- ============================================================
          MAIN — CONTIDO PRINCIPAL XERADO DINAMICAMENTE
          hero-dinamico: sección hero (tipo A/B/C)
@@ -3613,8 +3622,9 @@
 <!-- <script>
     window._API_URL = 'https://script.google.com/macros/s/AKfycbwxW3WPyIibpWEwqoh-ohGhn1IevoV8kZYEqa8SZUrtwWXS0A993KN-g6c6Ln6cfSwo/exec';
 </script> -->
-    <script> 
-        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
+    <script>
+        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE'; // Google Sheets API v4 (directo, rápido)
+        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/'; // Fallback: worker
     </script>
 
     <!-- ============================================================
@@ -3722,15 +3732,31 @@
         let eventos = [];
         let seccions = [];
         const _API_URL = window._API_URL || null;
+        const _SHEETS_KEY = window._SHEETS_KEY || null;
+        const SHEET_ID = '159cNjgHw2BNr20nhxEqophX3RRtWjdmokDWoWz5mBw0';
 
-        /* Constrúe a URL para pedir CSV segundo o modo de despregue:
-           - Por defecto: /datos/{sheet}.csv (servidor Node.js local)
-           - Se _API_URL está definido: {_API_URL}?sheet={sheet} (Google Apps Script)
-           Defínese en produción cun script antes de pechar &lt;/body&gt;:
-           window._API_URL = 'https://script.google.com/macros/s/ID/exec'; */
         function apiURL(sheet) {
+            if (_SHEETS_KEY) return 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + '/values/' + encodeURIComponent(sheet) + '?key=' + _SHEETS_KEY;
             if (_API_URL) return _API_URL + '?sheet=' + sheet;
             return '/datos/' + sheet + '.csv';
+        }
+
+        async function fetchSheet(sheet) {
+            if (_SHEETS_KEY) {
+                const r = await fetch(apiURL(sheet));
+                const data = await r.json();
+                if (!data.values) throw new Error('Baleiro: ' + sheet);
+                const csv = data.values.map(function (row) {
+                    return row.map(function (c) {
+                        if (c == null) return '';
+                        var s = String(c);
+                        if (/[,"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+                        return s;
+                    }).join(',');
+                }).join('\n');
+                return new Response(csv, { status: 200, statusText: 'OK', headers: { 'Content-Type': 'text/csv' } });
+            }
+            return fetch(apiURL(sheet));
         }
 
         /* -------------------------------------------------------
@@ -3777,95 +3803,134 @@
             } catch (e) {}
         }
 
+        async function procesarCSVs(responses) {
+            const [rCfg, rCont, rSec, rGal] = responses;
+            const cfg = (parseCSV(await rCfg.text())).datos[0] || {};
+            configuracion = {
+                ticker_activo: cfg.ticker_activo || 'SI',
+                ticker: cfg.ticker || 'Benvidos á biblioteca',
+                hero_tipo: cfg.hero_tipo || 'A',
+                hero_titulo: cfg.hero_titulo || 'Un lugar onde as historias cobran vida',
+                hero_subtitulo: cfg.hero_subtitulo || 'Benvido ao espazo cultural...',
+                hero_imaxe: cfg.hero_imaxe || 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80',
+                hero_boton_texto: cfg.hero_boton_texto || 'Explorar Eventos',
+                hero_boton_link: cfg.hero_boton_link || '#seccion-eventos',
+                hero_boton2_texto: cfg.hero_boton2_texto || 'Recomendacións',
+                hero_boton2_link: cfg.hero_boton2_link || '#seccion-carrusel',
+                hero_libro_titulo: cfg.hero_libro_titulo || 'As Malas Mulleres',
+                hero_libro_autor: cfg.hero_libro_autor || 'Marilar Aleixandre',
+                hero_libro_cita: cfg.hero_libro_cita || 'A literatura ten forza.',
+                hero_libro_portada: cfg.hero_libro_portada || 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80'
+            };
+
+            const contData = (parseCSV(await rCont.text())).datos;
+            for (const row of contData) {
+                if (row.evento_titulo && row.evento_titulo.trim() !== '') {
+                    eventos.push({
+                        titulo: row.evento_titulo,
+                        autor: row.evento_autora || '',
+                        data: row.evento_data || '',
+                        hora: row.evento_hora || '',
+                        categoria: row.evento_categoria || 'Outro',
+                        imaxe: row.evento_imaxe || '',
+                        destacado: row.evento_destacado || 'NON',
+                        hero_destacado: row.hero_destacado || 'NON',
+                        descricion: row.descricion || ''
+                    });
+                } else if (row.titulo && row.titulo.trim() !== '') {
+                    libros.push({
+                        titulo: row.titulo,
+                        autor: row.autor || '',
+                        imaxe: row.imaxe || '',
+                        descricion: row.descricion || '',
+                        categoria: row.categoria || 'Xeral',
+                        nivel: row.nivel || '',
+                        link: row.link || '#',
+                        favorito_de: row.favorito_de || '',
+                        destacado: row.destacado || 'NON',
+                        etiqueta: row.etiqueta || '',
+                        disponible: row.disponible || 'SI',
+                        cita: row.cita || ''
+                    });
+                }
+            }
+
+            const secData = (parseCSV(await rSec.text())).datos;
+            seccions = secData
+                .filter(s => s.activo && s.activo.trim().toUpperCase() === 'SI')
+                .sort((a, b) => parseInt(a.orde) - parseInt(b.orde));
+
+            if (rGal && rGal.ok) {
+                const galDatos = (parseCSV(await rGal.text())).datos;
+                window._galeriaDatos = galDatos.map(function (g) {
+                    return { directorio: g.directorio || '', titulo: g.titulo || '', desc: g.descricion || '', url: g.url || '' };
+                }).filter(function (g) { return g.url; });
+            }
+        }
+
         async function cargarDatos() {
             if (cargarCache()) renderizarTodo();
 
-            try {
-                const [rCfg, rCont, rSec, rGal] = await Promise.all([
-                    fetch(apiURL('configuracion')),
-                    fetch(apiURL('contido')),
-                    fetch(apiURL('seccions')),
-                    fetch(apiURL('galeria'))
-                ]);
-                if (!rCfg.ok || !rCont.ok || !rSec.ok) throw new Error('Non se atoparon os CSVs');
+            function completar() {
+                if (!libros.length) { libros = [{ titulo: 'Exemplo', autor: 'Autor', imaxe: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80', descricion: 'Descrición', categoria: 'Novela', nivel: '14+', link: '#', favorito_de: '', etiqueta: 'Novidade', disponible: 'SI', cita: '' }]; }
+                if (!eventos.length) { eventos = [{ titulo: 'Evento exemplo', autor: 'Autora', data: '12 Maio 2026', hora: '11:30h', categoria: 'Obradoiro', imaxe: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80', destacado: 'SI', hero_destacado: 'NON', descricion: 'Descrición do evento' }]; }
+                if (!seccions.length) { seccions = [{ tipo_seccion: 'carrusel', titulo: 'Recomendacións', filtro_categoria: '', orde: '1', activo: 'SI' }]; }
+                gardarCache(); renderizarTodo();
+            }
 
-                const cfg = (parseCSV(await rCfg.text())).datos[0] || {};
-                configuracion = {
-                    ticker_activo: cfg.ticker_activo || 'SI',
-                    ticker: cfg.ticker || 'Benvidos á biblioteca',
-                    hero_tipo: cfg.hero_tipo || 'A',
-                    hero_titulo: cfg.hero_titulo || 'Un lugar onde as historias cobran vida',
-                    hero_subtitulo: cfg.hero_subtitulo || 'Benvido ao espazo cultural...',
-                    hero_imaxe: cfg.hero_imaxe || 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80',
-                    hero_boton_texto: cfg.hero_boton_texto || 'Explorar Eventos',
-                    hero_boton_link: cfg.hero_boton_link || '#seccion-eventos',
-                    hero_boton2_texto: cfg.hero_boton2_texto || 'Recomendacións',
-                    hero_boton2_link: cfg.hero_boton2_link || '#seccion-carrusel',
-                    hero_libro_titulo: cfg.hero_libro_titulo || 'As Malas Mulleres',
-                    hero_libro_autor: cfg.hero_libro_autor || 'Marilar Aleixandre',
-                    hero_libro_cita: cfg.hero_libro_cita || 'A literatura ten forza.',
-                    hero_libro_portada: cfg.hero_libro_portada || 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80'
-                };
-
-                const contData = (parseCSV(await rCont.text())).datos;
-                for (const row of contData) {
-                    if (row.evento_titulo && row.evento_titulo.trim() !== '') {
-                        eventos.push({
-                            titulo: row.evento_titulo,
-                            autor: row.evento_autora || '',
-                            data: row.evento_data || '',
-                            hora: row.evento_hora || '',
-                            categoria: row.evento_categoria || 'Outro',
-                            imaxe: row.evento_imaxe || '',
-                            destacado: row.evento_destacado || 'NON',
-                            hero_destacado: row.hero_destacado || 'NON',
-                            descricion: row.descricion || ''
-                        });
-                    } else if (row.titulo && row.titulo.trim() !== '') {
-                        libros.push({
-                            titulo: row.titulo,
-                            autor: row.autor || '',
-                            imaxe: row.imaxe || '',
-                            descricion: row.descricion || '',
-                            categoria: row.categoria || 'Xeral',
-                            nivel: row.nivel || '',
-                            link: row.link || '#',
-                            favorito_de: row.favorito_de || '',
-                            destacado: row.destacado || 'NON',
-                            etiqueta: row.etiqueta || '',
-                            disponible: row.disponible || 'SI',
-                            cita: row.cita || ''
-                        });
+            // 1. Google Sheets API directa (máis rápida, ~200ms)
+            if (_SHEETS_KEY) {
+                try {
+                    const r = await Promise.all([
+                        fetchSheet('configuracion'),
+                        fetchSheet('contido'),
+                        fetchSheet('seccions'),
+                        fetchSheet('galeria')
+                    ]);
+                    if (r.every(x => x.ok)) {
+                        libros = []; eventos = [];
+                        await procesarCSVs(r);
+                        completar();
+                        return;
                     }
-                }
+                } catch (e) { /* fallback ao worker */ }
+            }
 
-                const secData = (parseCSV(await rSec.text())).datos;
-                seccions = secData
-                    .filter(s => s.activo && s.activo.trim().toUpperCase() === 'SI')
-                    .sort((a, b) => parseInt(a.orde) - parseInt(b.orde));
+            // 2. Fallback: worker + Apps Script (se Sheets API falla)
+            if (_API_URL) {
+                try {
+                    const r = await Promise.all([
+                        fetchSheet('configuracion'),
+                        fetchSheet('contido'),
+                        fetchSheet('seccions'),
+                        fetchSheet('galeria')
+                    ]);
+                    if (r.every(x => x.ok)) {
+                        libros = []; eventos = [];
+                        await procesarCSVs(r);
+                        completar();
+                        return;
+                    }
+                } catch (e) { /* fallback a CSVs locais */ }
+            }
 
-                if (rGal && rGal.ok) {
-                    const galDatos = (parseCSV(await rGal.text())).datos;
-                    window._galeriaDatos = galDatos.map(function (g) {
-                        return { directorio: g.directorio || '', titulo: g.titulo || '', desc: g.descricion || '', url: g.url || '' };
-                    }).filter(function (g) { return g.url; });
+            // 4. Fallback final: CSVs locais
+            try {
+                const r = await Promise.all([
+                    fetch('datos/configuracion.csv'),
+                    fetch('datos/contido.csv'),
+                    fetch('datos/seccions.csv'),
+                    fetch('datos/galeria.csv')
+                ]);
+                if (r[0].ok) {
+                    await procesarCSVs(r);
+                    completar();
+                    return;
                 }
+            } catch (e) { /* fallback a exemplos */ }
 
-                if (!libros.length) {
-                    libros = [{ titulo: 'Exemplo', autor: 'Autor', imaxe: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80', descricion: 'Descrición', categoria: 'Novela', nivel: '14+', link: '#', favorito_de: '', etiqueta: 'Novidade', disponible: 'SI', cita: '' }];
-                }
-                if (!eventos.length) {
-                    eventos = [{ titulo: 'Evento exemplo', autor: 'Autora', data: '12 Maio 2026', hora: '11:30h', categoria: 'Obradoiro', imaxe: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80', destacado: 'SI', hero_destacado: 'NON', descricion: 'Descrición do evento' }];
-                }
-                if (!seccions.length) {
-                    seccions = [{ tipo_seccion: 'carrusel', titulo: 'Recomendacións', filtro_categoria: '', orde: '1', activo: 'SI' }];
-                }
-
-                gardarCache();
-                renderizarTodo();
-            } catch (e) {
-                console.error(e);
-                mostrarErro('Erro ao cargar CSVs: ' + e.message);
+            // 5. Fallback final: exemplos fixos
+            if (!libros.length) {
                 configuracion = { ticker: 'Benvidos', ticker_activo: 'SI', hero_tipo: 'A', hero_titulo: 'Biblioteca IES A Pinguela', hero_subtitulo: 'Benvido ao espazo cultural', hero_imaxe: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80', hero_boton_texto: 'Explorar', hero_boton_link: '#seccion-eventos' };
                 libros = [{ titulo: 'Libro de exemplo', autor: 'Autor', imaxe: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80', descricion: 'Descrición de exemplo', categoria: 'Xeral', nivel: '14+', link: '#', favorito_de: '', etiqueta: '', disponible: 'SI', cita: '' }];
                 eventos = [{ titulo: 'Evento de exemplo', autor: 'Autora', data: '12 Maio 2026', hora: '11:30h', categoria: 'Outro', imaxe: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80', destacado: 'SI', hero_destacado: 'NON', descricion: '' }];
@@ -3879,6 +3944,8 @@
            Orde: ticker → hero → seccións dinámicas → modais → drag
            ------------------------------------------------------- */
         function renderizarTodo() {
+            const ls = document.getElementById('loading-screen');
+            if (ls) { ls.style.opacity = '0'; setTimeout(function(){ ls.style.display = 'none'; }, 400); }
             renderizarTicker();
             renderizarHero();
             renderizarSeccionsDinamicas();
