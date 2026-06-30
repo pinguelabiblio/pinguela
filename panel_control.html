@@ -1,0 +1,2613 @@
+<!DOCTYPE html>
+<html lang="gl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control · Biblioteca IES A Pinguela</title>
+    <link rel="icon" type="image/png" href="imaxes/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!--
+    ============================================================
+    panel_control.html — PANEL DE ADMINISTRACIÓN
+    ============================================================
+    Ferramenta de edición en vivo para xestionar os datos
+    da web da biblioteca (CSV).
+
+    Funcionalidades:
+      - Editar configuración do hero e ticker
+      - CRUD de libros e eventos (engadir, editar, eliminar)
+      - Xestión de seccións con orde e activación
+      - Subida de imaxes ó servidor
+      - Arrastre para reordenar tarxetas
+      - Gardar cambios en lote (POST /gardar)
+      - Carga local de CSVs alternativos
+
+    Dependencias:
+      - Font Awesome 6 (iconas)
+      - Express no backend (server.js) para /gardar, /subir-imaxe
+    ============================================================
+    -->
+    <style>
+        /* ========================================================
+           VARIABLES CSS (modo claro / escuro)
+           ======================================================== */
+        :root {
+            --bg-principal: #fcfcfb;
+            --bg-superficie: #ffffff;
+            --bg-superficie-hover: #f5f3f1;
+            --bg-global: #fcfcfb;
+            --primaria: #7b1c2e;
+            --primaria-hover: #5e1322;
+            --secundaria: #c29b62;
+            --coral: #e07a5f;
+            --cor-texto: #1a1617;
+            --cor-texto-mutado: #61595a;
+            --cor-texto-fino: #756e6f;
+            --radius-baixo: 4px;
+            --radius-medio: 8px;
+            --radius-pill: 99px;
+            --bordo-fino: 1px solid rgba(26, 22, 23, 0.08);
+            --bordo-cor: rgba(26, 22, 23, 0.08);
+            --bordo-hover: rgba(123, 28, 46, 0.3);
+            --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+            --sombra-card-hover: 0 12px 24px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.03);
+            --sombra-flotante: 0 20px 40px rgba(0, 0, 0, 0.06);
+            --transicion: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* modo escuro */
+        [data-theme="dark"] {
+            --bg-principal: #121011;
+            --bg-superficie: #1a1718;
+            --bg-superficie-hover: #242021;
+            --cor-texto: #f0ecec;
+            --cor-texto-mutado: #aba2a4;
+            --cor-texto-fino: #756e6f;
+            --primaria: #e04a62;
+            --primaria-hover: #f06a80;
+            --secundaria: #dcb37b;
+            --coral: #ff8e72;
+            --bordo-fino: 1px solid rgba(240, 236, 236, 0.08);
+            --bordo-cor: rgba(240, 236, 236, 0.08);
+            --bordo-hover: rgba(224, 74, 98, 0.4);
+            --bg-global: #121011;
+            --sombra-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+            --sombra-card-hover: 0 12px 24px rgba(0, 0, 0, 0.6);
+            --sombra-flotante: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ========================================================
+           RESET E ESTILOS BASE
+           ======================================================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-principal);
+            color: var(--cor-texto);
+            line-height: 1.6;
+            letter-spacing: -0.01em;
+            -webkit-font-smoothing: antialiased;
+            transition: background-color 0.5s ease, color 0.5s ease;
+            padding: 24px;
+        }
+
+        .contenedor { max-width: 1400px; margin: 0 auto; }
+
+        /* ========================================================
+           HEADER, BOTÓNS E TABS
+           ======================================================== */
+        .header-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            background: var(--bg-superficie);
+            border-radius: var(--radius-medio);
+            padding: 16px 28px;
+            border: var(--bordo-fino);
+            box-shadow: var(--sombra-card);
+            margin-bottom: 24px;
+        }
+
+        .header-panel h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primaria);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-panel .accions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            font-weight: 500;
+            font-size: 14px;
+            border: var(--bordo-fino);
+            background: var(--bg-superficie);
+            color: var(--cor-texto);
+            cursor: pointer;
+            transition: var(--transicion);
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: var(--bg-superficie-hover);
+            border-color: var(--primaria);
+        }
+
+        .btn.primario {
+            background: var(--primaria);
+            color: #fff;
+            border-color: var(--primaria);
+        }
+
+        .btn.primario:hover { background: var(--primaria-hover); }
+
+        .btn.secundario { background: transparent; }
+
+        .btn i { font-size: 16px; }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-superficie);
+            border-radius: var(--radius-medio);
+            border: var(--bordo-fino);
+            padding: 4px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tabs button {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-baixo);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transicion);
+            color: var(--cor-texto-mutado);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tabs button:hover { background: var(--bg-superficie-hover); color: var(--cor-texto); }
+
+        .tabs button.activo { background: var(--primaria); color: #fff; }
+
+        .panel-tab { display: none; animation: fade 0.3s ease; }
+
+        .panel-tab.visible { display: block; }
+
+        @keyframes fade {
+            from { opacity: 0.4; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ========================================================
+           TARXETAS EDITABLES (libros, eventos, seccións)
+           ======================================================== */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 24px;
+            margin-top: 16px;
+        }
+
+        .card-item {
+            background: var(--bg-superficie);
+            border-radius: var(--radius-medio);
+            border: var(--bordo-fino);
+            box-shadow: var(--sombra-card);
+            padding: 20px;
+            transition: var(--transicion);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+            overflow: clip;
+        }
+
+        .card-item:hover {
+            box-shadow: var(--sombra-card-hover);
+            transform: translateY(-3px);
+            border-color: var(--bordo-cor);
+        }
+
+        .card-item .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .card-item .card-header .titulo {
+            font-weight: 600;
+            font-size: 17px;
+            color: var(--cor-texto);
+            flex: 1;
+        }
+
+        .card-item .card-header .badge {
+            font-size: 11px;
+            padding: 3px 12px;
+            border-radius: var(--radius-pill);
+            background: var(--bg-superficie-hover);
+            color: var(--cor-texto-mutado);
+            white-space: nowrap;
+        }
+
+        .card-item .card-header .badge.destacado { background: var(--primaria); color: #fff; }
+
+        .card-item .card-header .badge.hero { background: var(--secundaria); color: #fff; }
+
+        .card-item .card-header .badge.inactivo { background: #999; color: #fff; }
+
+        .card-item .card-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            width: 100%;
+        }
+        .card-item .card-body .editable-field.ancho-completo {
+            grid-column: 1 / -1;
+        }
+        .card-item[data-tipo="seccion"] .card-body .editable-field.ancho-completo {
+            grid-column: 1;
+        }
+        .seccions-basicas-card {
+            background: var(--bg-superficie);
+            border-radius: var(--radius-medio);
+            border: var(--bordo-fino);
+            box-shadow: var(--sombra-card);
+            padding: 16px 20px;
+            margin-bottom: 16px;
+        }
+        .seccions-basicas-card .card-header {
+            padding: 0 0 10px 0;
+            margin-bottom: 10px;
+            border-bottom: var(--bordo-fino);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .seccions-basicas-card .card-header .titulo {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .seccions-basicas-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .basica-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            background: var(--bg-global);
+            border-radius: var(--radius-medio);
+            border: var(--bordo-fino);
+        }
+        .basica-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--cor-texto-mutado);
+            min-width: 110px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .basica-titulo {
+            flex: 1;
+            min-width: 0;
+            font-size: 13px;
+            padding: 4px 8px;
+            border: var(--bordo-fino);
+            border-radius: var(--radius-medio);
+            background: var(--bg-superficie);
+            color: var(--cor-texto);
+        }
+
+        .card-item[data-tipo="seccion"] .card-body {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .card-item[data-tipo="seccion"] .card-body .editable-field label {
+            font-size: 10px;
+        }
+        .card-item[data-tipo="seccion"] .card-body .editable-field input,
+        .card-item[data-tipo="seccion"] .card-body .editable-field select {
+            font-size: 13px;
+            padding: 5px 8px;
+        }
+        .seccion-club-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+        .club-editor-grupo {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .club-editor-grupo label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--cor-texto-mutado);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .club-editor-grupo input,
+        .club-editor-grupo textarea {
+            font-size: 13px;
+            padding: 5px 8px;
+            border: var(--bordo-fino);
+            border-radius: var(--radius-medio);
+            background: var(--bg-global);
+            color: var(--cor-texto);
+        }
+        .club-editor-fila {
+            display: flex;
+            gap: 8px;
+        }
+        .club-editor-fila .club-editor-grupo { flex: 1; }
+
+        .efemeride-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .efemeride-editor .editable-field textarea {
+            font-size: 13px;
+            padding: 5px 8px;
+            border: var(--bordo-fino);
+            border-radius: var(--radius-medio);
+            background: var(--bg-global);
+            color: var(--cor-texto);
+        }
+
+        .sub-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+        }
+        .sub-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: var(--bg-global);
+            border-radius: var(--radius-medio);
+            border: var(--bordo-fino);
+        }
+        .sub-item-icon {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: var(--bg-superficie-hover);
+            color: var(--primaria);
+        }
+        .sub-item-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .sub-item-titulo {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cor-texto);
+        }
+        .sub-item-sub {
+            font-size: 10px;
+            color: var(--cor-texto-mutado);
+        }
+        .sub-item-cat {
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 2px 8px;
+            border-radius: var(--radius-pill);
+            background: var(--primaria);
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .sub-item-remove {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            border: none;
+            background: transparent;
+            color: var(--cor-texto-mutado);
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .sub-item-remove:hover {
+            background: #fee;
+            color: #c00;
+        }
+
+        .card-item .card-body .editable-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+        }
+
+        .card-item .card-body .editable-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--cor-texto-mutado);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-item .card-body .editable-field input,
+        .card-item .card-body .editable-field select,
+        .card-item .card-body .editable-field textarea {
+            padding: 6px 10px;
+            border: var(--bordo-fino);
+            border-radius: var(--radius-baixo);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg-principal);
+            transition: var(--transicion);
+            width: 100%;
+        }
+
+        .card-item .card-body .editable-field input:focus,
+        .card-item .card-body .editable-field select:focus,
+        .card-item .card-body .editable-field textarea:focus {
+            outline: none;
+            border-color: var(--primaria);
+            box-shadow: 0 0 0 3px rgba(123, 28, 46, 0.1);
+        }
+
+        .card-item .card-body .editable-field textarea { resize: vertical; min-height: 60px; }
+
+        .card-item .preview-img {
+            width: 60px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: var(--radius-baixo);
+            border: var(--bordo-fino);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .card-item .card-header .preview-wrap {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .card-item .card-accions {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 6px;
+            margin-top: 4px;
+            border-top: var(--bordo-fino);
+            padding-top: 12px;
+            align-items: center;
+            justify-content: flex-start;
+            flex-shrink: 0;
+        }
+
+        .card-item .card-accions .btn-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--cor-texto-mutado);
+            padding: 4px 8px;
+            border-radius: var(--radius-baixo);
+            transition: var(--transicion);
+            font-size: 15px;
+        }
+
+        .card-item .card-accions .btn-icon:hover { background: var(--bg-superficie-hover); color: var(--cor-texto); }
+
+        .card-item .card-accions .btn-icon.danger:hover { color: #c00; background: #fee; }
+
+        .card-item .card-accions .btn-icon.primary:hover { color: var(--primaria); }
+
+        .card-item .card-accions .select-orde {
+            padding: 4px 8px;
+            border: var(--bordo-fino);
+            border-radius: var(--radius-baixo);
+            font-size: 13px;
+            background: var(--bg-principal);
+            margin-left: auto;
+            min-width: 60px;
+        }
+
+        .toggle-switch, .card-item .card-accions .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .card-item .card-accions .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+        .card-item .card-accions .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #ccc;
+            border-radius: 24px;
+            transition: var(--transicion);
+        }
+
+        .card-item .card-accions .toggle-slider::before {
+            content: "";
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: var(--transicion);
+        }
+
+        .card-item .card-accions .toggle-switch input:checked + .toggle-slider { background: var(--primaria); }
+
+        .card-item .card-accions .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+        /* ========================================================
+           CONFIGURACIÓN / DESTACADOS / DRAGGABLE / AVISOS
+           ======================================================== */
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* campos internos da configuración */
+        .config-grid .card-item label {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--cor-texto-mutado);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .config-grid .card-item input,
+        .config-grid .card-item select {
+            width: 100%;
+            padding: 10px 14px;
+            border: var(--bordo-fino);
+            border-radius: var(--radius-baixo);
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg-principal);
+            transition: var(--transicion);
+        }
+
+        .config-grid .card-item input:focus,
+        .config-grid .card-item select:focus {
+            outline: none;
+            border-color: var(--primaria);
+            box-shadow: 0 0 0 3px rgba(123, 28, 46, 0.1);
+        }
+
+        .destacados-control {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--bg-superficie);
+            padding: 12px 20px;
+            border-radius: var(--radius-medio);
+            border: var(--bordo-fino);
+            margin-bottom: 20px;
+        }
+
+        .destacados-control .info {
+            font-size: 14px;
+            color: var(--cor-texto-mutado);
+        }
+
+        .destacados-control .info strong { color: var(--primaria); }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--cor-texto-mutado);
+            background: var(--bg-superficie);
+            border-radius: var(--radius-medio);
+            border: var(--bordo-fino);
+        }
+
+        .card-item.dragging { opacity: 0.5; transform: scale(0.98); }
+
+        .card-item.drag-over { border-color: var(--primaria); box-shadow: 0 0 0 2px var(--primaria); }
+
+        .erro-csv {
+            background: #fee;
+            border: 1px solid #c00;
+            color: #c00;
+            padding: 12px 20px;
+            border-radius: var(--radius-medio);
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .erro-csv.visible { display: block; }
+
+        @media (max-width: 768px) {
+            .header-panel { flex-direction: column; align-items: stretch; text-align: center; }
+            .header-panel .accions { justify-content: center; }
+            .tabs button { flex: 1 0 auto; font-size: 13px; padding: 8px 12px; }
+            .grid-cards { grid-template-columns: 1fr; }
+            .config-grid { grid-template-columns: 1fr; }
+        }
+
+        /* galería: grupos por directorio */
+        .grupo-directorio {
+            grid-column: 1 / -1;
+            border: var(--bordo-fino);
+        }
+        .subgrid-fotos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .grupo-directorio .card-body { display: none; }
+        .grupo-directorio.album-aberto .card-body { display: block; }
+        .grupo-directorio.album-aberto .album-toggle { transform: rotate(90deg); }
+        .album-toggle {
+            font-size: 14px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .subfoto {
+            border: 1px solid var(--bordo-fino);
+            border-radius: var(--radius-medio);
+            overflow: hidden;
+            background: var(--bg-principal);
+        }
+        .subfoto .card-header {
+            padding: 0;
+        }
+        .subfoto .card-header .preview-wrap {
+            width: 100%;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .subfoto .card-header .preview-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .subfoto .card-subbody {
+            padding: 8px 10px;
+        }
+        .subfoto .card-subbody .editable-field {
+            margin-bottom: 4px;
+        }
+        .subfoto .card-subbody .editable-field label {
+            font-size: 10px;
+            display: block;
+        }
+        .subfoto .card-subbody .editable-field input {
+            font-size: 12px;
+            padding: 4px 6px;
+        }
+        .subfoto .card-accions {
+            padding: 4px 8px 8px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .subfoto .card-accions .btn-icon {
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+        .engadir-url-rapido {
+            background: var(--bg-principal);
+            border-radius: var(--radius-medio);
+            padding: 12px 16px;
+            margin-top: 8px;
+        }
+        .engadir-url-rapido label {
+            font-size: 13px;
+            display: block;
+            margin-bottom: 6px;
+            color: var(--cor-texto-mutado);
+        }
+        .engadir-url-rapido .fila-input {
+            display: flex;
+            gap: 8px;
+        }
+        .engadir-url-rapido .fila-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: var(--radius-pill);
+            border: var(--bordo-fino);
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .engadir-url-rapido .fila-input button {
+            white-space: nowrap;
+        }
+
+        /* ---- Nivel badge na cabeceira ---- */
+        .nivel-input-mini {
+            display: inline-block;
+            width: auto;
+            max-width: 100px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: var(--radius-pill);
+            border: var(--bordo-fino);
+            background: var(--bg-principal);
+            color: var(--cor-texto-mutado);
+            margin-left: 6px;
+            vertical-align: middle;
+            font-family: inherit;
+        }
+        .nivel-input-mini:focus {
+            outline: 2px solid var(--primaria);
+            outline-offset: 1px;
+        }
+
+        /* ---- Favoritos chips ---- */
+        .favoritos-container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 6px;
+        }
+        .favoritos-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            width: 100%;
+        }
+        .chip-favorito {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--primaria);
+            color: #fff;
+            padding: 2px 8px 2px 10px;
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .chip-favorito .chip-remove {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0 2px;
+        }
+        .chip-favorito .chip-remove:hover {
+            color: #fff;
+        }
+        .favoritos-add {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        .favoritos-add select {
+            flex: 0 1 auto;
+            min-width: 0;
+            max-width: 110px;
+            font-size: 11px;
+            padding: 3px 4px;
+            border-radius: var(--radius-pill);
+            border: var(--bordo-fino);
+            font-family: inherit;
+            background: var(--bg-superficie);
+        }
+        .favoritos-add input {
+            flex: 1 1 60px;
+            min-width: 60px;
+            font-size: 11px;
+            padding: 5px 6px;
+            border-radius: var(--radius-pill);
+            border: var(--bordo-fino);
+            font-family: inherit;
+            background: var(--bg-superficie);
+        }
+        .subapartados-add {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        .subapartados-add input,
+        .subapartados-add select {
+            flex: 1 1 80px;
+            min-width: 60px;
+            font-size: 11px;
+            padding: 5px 6px;
+            border-radius: var(--radius-pill);
+            border: var(--bordo-fino);
+            font-family: inherit;
+            background: var(--bg-superficie);
+        }
+        .subapartados-add .sub-add-btn {
+            flex: 0 0 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 12px;
+            border-radius: 50%;
+        }
+        .subapartados-add .sub-cancel-btn {
+            flex: 0 0 28px;
+            height: 28px;
+            padding: 0;
+            font-size: 12px;
+            border-radius: 50%;
+        }
+        .btn-sub-apartados-add {
+            background: transparent;
+            border: 1px dashed var(--cor-texto-mutado);
+            color: var(--cor-texto-mutado);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            cursor: pointer;
+            font-size: 12px;
+            transition: var(--transicion);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-sub-apartados-add:hover {
+            border-color: var(--primaria);
+            color: var(--primaria);
+            background: var(--bg-superficie-hover);
+        }
+        .subapartados-container .favoritos-chips {
+            margin-bottom: 4px;
+        }
+        .chip-cat {
+            display: inline-block;
+            font-size: 9px;
+            background: var(--bg-principal);
+            color: var(--cor-texto-mutado);
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-left: 3px;
+        }
+        .favoritos-add button {
+            flex: 0 0 26px;
+            height: 26px;
+            padding: 0;
+            font-size: 12px;
+            border-radius: 50%;
+        }
+
+        /* ---- Campos colapsables (cita, sinopse) ---- */
+        .btn-colapsable {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: var(--bordo-fino);
+            border-radius: var(--radius-pill);
+            padding: 4px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--cor-texto-mutado);
+            font-family: inherit;
+            transition: var(--transicion);
+        }
+        .btn-colapsable:hover {
+            background: var(--bg-superficie-hover);
+            color: var(--cor-texto);
+        }
+        .btn-colapsable.activo i {
+            transform: rotate(90deg);
+        }
+        .btn-colapsable i {
+            transition: transform 0.2s;
+            font-size: 10px;
+        }
+        .colapsable-contido {
+            margin-top: 6px;
+        }
+        .colapsable-contido textarea {
+            width: 100%;
+            min-height: 60px;
+            padding: 8px;
+            border-radius: var(--radius-baixo);
+            border: var(--bordo-fino);
+            font-family: inherit;
+            font-size: 13px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+
+    <div class="contenedor">
+
+        <!-- ========================================================
+             HEADER DO PANEL (título e botóns de acción global)
+             ======================================================== -->
+        <header class="header-panel">
+            <h1><i class="fas fa-sliders-h" style="color:var(--secundaria);"></i> Panel de Control</h1>
+            <div class="accions">
+                <button class="btn primario" id="btn-gardar-todo"><i class="fas fa-save"></i> Gardar todo</button>
+                <button class="btn secundario" id="btn-cargar-datos"><i class="fas fa-upload"></i> Cargar CSVs</button>
+                <button class="btn secundario" id="btn-vista-previa"><i class="fas fa-eye"></i> Vista previa</button>
+                <a href="index.html" class="btn secundario" target="_blank"><i class="fas fa-external-link-alt"></i> Ver web</a>
+            </div>
+        </header>
+
+        <!-- ========================================================
+             TICKER — edición rápida sempre visible
+             ======================================================== -->
+        <div style="background:var(--bg-superficie);border-radius:var(--radius-medio);border:var(--bordo-fino);padding:14px 20px;margin-bottom:24px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
+            <label style="font-weight:600;font-size:14px;color:var(--cor-texto-mutado);display:flex;align-items:center;gap:8px;"><i class="fas fa-bullhorn"></i> Ticker:</label>
+            <input type="text" id="ticker-input"
+                style="flex:2;min-width:200px;padding:8px 14px;border:var(--bordo-fino);border-radius:50px;font-family:inherit;font-size:14px;background:var(--bg-principal);"
+                placeholder="Mensaxes separadas por ·" />
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <label class="toggle-switch" style="flex-shrink:0;">
+                    <input type="checkbox" id="ticker_activo_check" checked />
+                    <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size:12px;color:var(--cor-texto-mutado);">Activado</span>
+            </div>
+        </div>
+
+        <div class="erro-csv" id="erro-csv"></div>
+
+        <!-- ========================================================
+             TABS DE NAVEGACIÓN (Configuración / Libros / Eventos / Seccións)
+             ======================================================== -->
+        <div class="tabs" id="tabs-container">
+            <button class="activo" data-tab="tab-config"><i class="fas fa-cog"></i> Configuración</button>
+            <button data-tab="tab-libros"><i class="fas fa-book"></i> Libros</button>
+            <button data-tab="tab-eventos"><i class="fas fa-calendar-alt"></i> Eventos</button>
+            <button data-tab="tab-seccions"><i class="fas fa-sitemap"></i> Seccións</button>
+            <button data-tab="tab-galeria"><i class="fas fa-images"></i> Galería</button>
+        </div>
+
+        <!-- ========================================================
+             PANEL: CONFIGURACIÓN (hero, ticker, contador)
+             ======================================================== -->
+        <div class="panel-tab visible" id="tab-config">
+            <div class="config-grid">
+                <div class="card-item"><label title="Como se mostra o hero na páxina principal">Hero estilo</label><select id="hero_estilo">
+                        <option value="A">A (imaxe+texto)</option>
+                        <option value="B">B (portada+cita)</option>
+                        <option value="C">C (editorial)</option>
+                    </select></div>
+                <div class="card-item"><label title="Título grande do hero">Hero título</label><input type="text" id="hero_titulo" /></div>
+                <div class="card-item"><label title="Texto pequeno debaixo do título">Hero subtítulo</label><input type="text" id="hero_subtitulo" /></div>
+                <div class="card-item"><label title="URL da imaxe de fondo (Google Drive, Unsplash...)">Imaxe hero (URL)</label><input type="text" id="hero_imaxe" placeholder="https://..." /></div>
+                <div class="card-item"><label title="Texto do botón principal">Texto botón hero</label><input type="text" id="hero_boton-texto" /></div>
+                <div class="card-item"><label title="Sección á que apunta o botón">Ligazón botón hero</label>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <input type="text" id="hero_boton-link" placeholder="#seccion-eventos" style="flex:1;min-width:120px;" />
+                        <select id="hero_boton-select" style="flex:1;min-width:120px;" onchange="if(this.value){document.getElementById('hero_boton-link').value=this.value;}">
+                            <option value="">— Escoller sección —</option>
+                            <option value="#seccion-eventos">Axenda Cultural</option>
+                            <option value="#seccion-carrusel">Lecturas</option>
+                            <option value="#seccion-libro_mes">Lectura do Mes</option>
+                            <option value="#seccion-club">Club de Lectura</option>
+                            <option value="#seccion-normas">Normas</option>
+                            <option value="#seccion-galeria">Galería</option>
+                            <option value="#seccion-contacto">Contacto</option>
+                            <option value="#seccion-preferidos">Preferidos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-item"><label title="Só para estilo B: título do libro destacado">Libro título (estilo B)</label><input type="text" id="hero_libro-titulo" /></div>
+                <div class="card-item"><label title="Só para estilo B: autor/a">Libro autor (estilo B)</label><input type="text" id="hero_libro-autor" /></div>
+                <div class="card-item"><label title="Só para estilo B: frase do libro">Libro cita (estilo B)</label><input type="text" id="hero_libro-cita" /></div>
+                <div class="card-item"><label title="Só para estilo B: URL da portada">Libro portada (estilo B)</label><input type="text" id="hero_libro-portada" placeholder="https://..." /></div>
+                <div class="card-item"><label title="Texto do segundo botón">Texto botón 2</label><input type="text" id="hero_boton2-texto" /></div>
+                <div class="card-item"><label title="Ligazón do segundo botón">Ligazón botón 2</label>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <input type="text" id="hero_boton2-link" placeholder="#seccion-carrusel" style="flex:1;min-width:120px;" />
+                        <select id="hero_boton2-select" style="flex:1;min-width:120px;" onchange="if(this.value){document.getElementById('hero_boton2-link').value=this.value;}">
+                            <option value="">— Escoller sección —</option>
+                            <option value="#seccion-eventos">Axenda Cultural</option>
+                            <option value="#seccion-carrusel">Lecturas</option>
+                            <option value="#seccion-libro_mes">Lectura do Mes</option>
+                            <option value="#seccion-club">Club de Lectura</option>
+                            <option value="#seccion-normas">Normas</option>
+                            <option value="#seccion-galeria">Galería</option>
+                            <option value="#seccion-contacto">Contacto</option>
+                            <option value="#seccion-preferidos">Preferidos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <p style="margin-top:16px;color:var(--cor-texto-mutado);font-size:13px;"><i class="fas fa-info-circle"></i> Estes valores gardaranse en <strong>configuracion.csv</strong>.</p>
+        </div>
+
+        <!-- ========================================================
+             PANEL: LIBROS (lista editable con imaxes, categorías...)
+             ======================================================== -->
+        <div class="panel-tab" id="tab-libros">
+            <div class="destacados-control">
+                <span class="info"><i class="fas fa-star" style="color:var(--secundaria);"></i> <strong>Libro destacado:</strong> <span id="destacado-libro-info">Ningún</span></span>
+                <button class="btn secundario" id="btn-limpar-destacado-libro"><i class="fas fa-times"></i> Quitar destacado</button>
+                <button class="btn primario" id="btn-engadir-libro"><i class="fas fa-plus"></i> Engadir libro</button>
+                <span class="badge" style="background:var(--bg-superficie-hover);padding:4px 12px;border-radius:50px;" id="contador-libros">0</span>
+            </div>
+            <div class="grid-cards" id="grid-libros"></div>
+        </div>
+
+        <!-- ========================================================
+             PANEL: EVENTOS (con data, hora, categoría e hero)
+             ======================================================== -->
+        <div class="panel-tab" id="tab-eventos">
+            <div class="destacados-control">
+                <span class="info"><i class="fas fa-crown" style="color:var(--secundaria);"></i> <strong>Evento hero:</strong> <span id="hero_evento-info">Ningún</span></span>
+                <button class="btn secundario" id="btn-limpar-hero_evento"><i class="fas fa-times"></i> Quitar hero</button>
+                <button class="btn primario" id="btn-engadir-evento"><i class="fas fa-plus"></i> Engadir evento</button>
+                <span class="badge" style="background:var(--bg-superficie-hover);padding:4px 12px;border-radius:50px;" id="contador-eventos">0</span>
+            </div>
+            <div class="grid-cards" id="grid-eventos"></div>
+        </div>
+
+        <!-- ========================================================
+             PANEL: SECCIÓNS (orde, tipo, filtros, activación)
+             ======================================================== -->
+        <div class="panel-tab" id="tab-seccions">
+            <div class="flex-between">
+                <span class="info"><i class="fas fa-sitemap"></i> <strong>Seccións da páxina</strong> (orde por arrastre ou select)</span>
+                <button class="btn primario" id="btn-engadir-seccion"><i class="fas fa-plus"></i> Engadir sección</button>
+            </div>
+            <div class="grid-cards" id="grid-seccions"></div>
+        </div>
+
+        <!-- ========================================================
+             PANEL: GALERÍA (xestión de imaxes da galería)
+             ======================================================== -->
+        <div class="panel-tab" id="tab-galeria">
+            <div class="flex-between">
+                <span class="info"><i class="fas fa-images"></i> <strong>Galería de imaxes</strong> <span id="contador-galeria"></span></span>
+                <button class="btn primario" id="btn-engadir-album"><i class="fas fa-plus"></i> Novo álbum</button> <button class="btn" id="btn-engadir-foto-galeria"><i class="fas fa-image"></i> Engadir foto</button>
+            </div>
+            <div class="grid-cards" id="grid-galeria"></div>
+        </div>
+
+        <!-- ========================================================
+             FOOTER DO PANEL
+             ======================================================== -->
+        <div style="background:var(--bg-superficie);border-radius:var(--radius-medio);border:var(--bordo-fino);padding:16px 20px;margin-bottom:24px;font-size:14px;color:var(--cor-texto-mutado);">
+            <p><i class="fas fa-lightbulb" style="color:var(--secundaria);"></i> <strong>Guía rápida:</strong></p>
+            <ol style="margin-top:8px;padding-left:20px;line-height:1.8;">
+                <li><strong>Libros:</strong> enche título, autor, categoría. A <strong>categoría</strong> pode levar varios valores separados por <code>;</code> (ex: <code>Novela xuvenil;aventura</code>).</li>
+                <li><strong>Imaxes:</strong> pega unha ligazón de <strong>Google Drive</strong> (o panel convértea soíño). Tamén valen Unsplash, Imgur, etc.</li>
+                <li><strong>Gardar:</strong> preme "Gardar todo" cando remates. Faise copia de seguridade automaticamente.</li>
+            </ol>
+        </div>
+
+        <footer style="margin-top:40px;padding:20px 0;border-top:var(--bordo-fino);font-size:13px;color:var(--cor-texto-mutado);text-align:center;">
+            <p><i class="fas fa-bolt"></i> As modificacións son en memoria. Preme <strong>"Gardar todo"</strong> para gardar os cambios no servidor.</p>
+        </footer>
+
+    </div>
+
+    <script>
+       window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
+    </script>
+
+    <!-- ============================================================
+         JAVASCRIPT — LÓXICA DO PANEL DE CONTROL
+         ============================================================ -->
+    <script>
+        /* -------------------------------------------------------
+           PARSEADOR DE CSV (igual que en index.html)
+           parseCSV(texto) → { cabeceiras: [], datos: [] }
+           parseLinhaCSV(linha) → ["campo1", "campo2"...]
+           ------------------------------------------------------- */
+        function parseCSV(texto) {
+            var linhas = [], actual = '', dentroAspas = false;
+            for (var i = 0; i < texto.length; i++) {
+                var c = texto[i];
+                if (c === '"') { dentroAspas = !dentroAspas; actual += c; }
+                else if (c === '\n' && !dentroAspas) {
+                    if (actual.trim() !== '') linhas.push(actual);
+                    actual = '';
+                } else { actual += c; }
+            }
+            if (actual.trim() !== '') linhas.push(actual);
+            if (linhas.length < 2) return { cabeceiras: [], datos: [] };
+            const cabeceiras = parseLinhaCSV(linhas[0]);
+            const datos = [];
+            for (let i = 1; i < linhas.length; i++) {
+                const valores = parseLinhaCSV(linhas[i]);
+                const obj = {};
+                cabeceiras.forEach(function (key, idx) { obj[key] = valores[idx] || ''; });
+                datos.push(obj);
+            }
+            return { cabeceiras: cabeceiras, datos: datos };
+        }
+
+        function parseLinhaCSV(linha) {
+            const resultado = [];
+            let atual = '', dentroAspas = false;
+            for (let i = 0; i < linha.length; i++) {
+                const c = linha[i];
+                if (c === '"') {
+                    if (dentroAspas && i + 1 < linha.length && linha[i + 1] === '"') {
+                        atual += '"';
+                        i++;
+                    } else {
+                        dentroAspas = !dentroAspas;
+                    }
+                } else if (c === ',' && !dentroAspas) { resultado.push(atual.trim()); atual = ''; }
+                else atual += c;
+            }
+            resultado.push(atual.trim());
+            return resultado;
+        }
+
+        /* -------------------------------------------------------
+           objectToCSV(cabeceiras, datos) → string CSV
+           Converte un array de obxectos a formato CSV,
+           escapando campos que conteñan comas ou aspas.
+           ------------------------------------------------------- */
+        function objectToCSV(cabeceiras, datos) {
+            const linhas = [cabeceiras.join(',')];
+            datos.forEach(function (obj) {
+                const valores = cabeceiras.map(function (key) {
+                    let val = obj[key] || '';
+                    if (val.includes(',') || val.includes('"') || val.includes('\n')) val = '"' + val.replace(/"/g, '""') + '"';
+                    return val;
+                });
+                linhas.push(valores.join(','));
+            });
+            return linhas.join('\n');
+        }
+
+        /* -------------------------------------------------------
+           parseDate / formatDateForInput / formatDateFromInput
+           Conversión entre datas en galego ("12 Maio 2026") e
+           formato HTML (input type="date" → "2026-05-12").
+           ------------------------------------------------------- */
+        function parseDate(str) {
+            if (!str) return new Date(0);
+            try {
+                const partes = str.split(' ');
+                const dia = parseInt(partes[0]);
+                const mes = partes[1];
+                const ano = parseInt(partes[2] || '2026');
+                const meses = { Xan: 0, Feb: 1, Mar: 2, Abr: 3, Mai: 4, Xuñ: 5, Xul: 6, Ago: 7, Set: 8, Out: 9, Nov: 10, Dec: 11 };
+                const mesNum = meses[mes] !== undefined ? meses[mes] : 0;
+                return new Date(ano, mesNum, dia);
+            } catch (e) { return new Date(0); }
+        }
+
+        function formatDateForInput(str) {
+            if (!str) return '';
+            try {
+                str = str.trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+                const m = str.match(/^(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{4}))?$/);
+                if (m) {
+                    const dia = parseInt(m[1]), mes = parseInt(m[2]), ano = parseInt(m[3] || '2026');
+                    return ano + '-' + String(mes).padStart(2, '0') + '-' + String(dia).padStart(2, '0');
+                }
+                const partes = str.split(' ');
+                const dia = parseInt(partes[0]);
+                const mes = partes[1];
+                const ano = parseInt(partes[2] || '2026');
+                const meses = { Xan: '01', Feb: '02', Mar: '03', Abr: '04', Mai: '05', Xuñ: '06', Xul: '07', Ago: '08', Set: '09', Out: '10', Nov: '11', Dec: '12' };
+                const mesNum = meses[mes] || '01';
+                return ano + '-' + mesNum + '-' + String(dia).padStart(2, '0');
+            } catch (e) { return ''; }
+        }
+
+        function formatDateFromInput(str) {
+            if (!str) return '';
+            try {
+                const partes = str.split('-');
+                const ano = parseInt(partes[0]);
+                const mes = parseInt(partes[1]);
+                const dia = parseInt(partes[2]);
+                const meses = ['Xan', 'Feb', 'Mar', 'Abr', 'Mai', 'Xuñ', 'Xul', 'Ago', 'Set', 'Out', 'Nov', 'Dec'];
+                return dia + ' ' + meses[mes - 1] + ' ' + ano;
+            } catch (e) { return ''; }
+        }
+
+        /* -------------------------------------------------------
+           ESTADO GLOBAL DO PANEL
+           configuracion → obxecto de configuración do hero/ticker
+           contido       → array mesturado de libros e eventos
+           seccions      → array de seccións
+           cabeceiras*   → cabeceiras orixinais dos CSV (para preservalas)
+           ------------------------------------------------------- */
+        var configuracion = {};
+        var contido = [];
+        var seccions = [];
+        var galeriaDatos = [];
+        var cabeceirasConfig = [], cabeceirasContido = [], cabeceirasSeccions = [], cabeceirasGaleria = [];
+        var _API_URL = window._API_URL || null;
+        var _SHEETS_KEY = window._SHEETS_KEY || null;
+        var SHEET_ID = '159cNjgHw2BNr20nhxEqophX3RRtWjdmokDWoWz5mBw0';
+
+        function apiURL(sheet) {
+            if (_SHEETS_KEY) return 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + '/values/' + encodeURIComponent(sheet) + '?key=' + _SHEETS_KEY;
+            if (_API_URL) return _API_URL + '?sheet=' + sheet;
+            return '/datos/' + sheet + '.csv';
+        }
+
+        async function fetchSheet(sheet) {
+            if (_SHEETS_KEY) {
+                var r = await fetch(apiURL(sheet));
+                var data = await r.json();
+                if (!data.values) throw new Error('Baleiro: ' + sheet);
+                var csv = data.values.map(function (row) {
+                    return row.map(function (c) {
+                        if (c == null) return '';
+                        var s = String(c);
+                        if (/[,"\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+                        return s;
+                    }).join(',');
+                }).join('\n');
+                return new Response(csv, { status: 200, statusText: 'OK', headers: { 'Content-Type': 'text/csv' } });
+            }
+            return fetch(apiURL(sheet));
+        }
+
+        /* Converte URL de Google Drive ao formato export (directo para <img>) */
+        function converterURLDrive(url) {
+            if (!url) return url;
+            var match = url.match(/drive\.google\.com\/file\/d\/([^\/?#&]+)/);
+            if (match) return 'https://drive.google.com/uc?export=view&id=' + match[1];
+            return url;
+        }
+
+        /* -------------------------------------------------------
+            cargarDatosIniciais() — carga os CSVs do servidor
+            Se falla, carga datos de exemplo embutidos.
+            ------------------------------------------------------- */
+        async function cargarDatosIniciais() {
+            try {
+                const [respConfig, respCont, respSecc, respGal] = await Promise.all([
+                    fetchSheet('configuracion'),
+                    fetchSheet('contido'),
+                    fetchSheet('seccions'),
+                    fetchSheet('galeria')
+                ]);
+                if (!respConfig.ok || !respCont.ok || !respSecc.ok) throw new Error('Non se puideron cargar os CSVs');
+                const textoConfig = await respConfig.text();
+                const textoCont = await respCont.text();
+                const textoSecc = await respSecc.text();
+                cargarConfigCSV(textoConfig);
+                cargarContidoCSV(textoCont);
+                cargarSeccionsCSV(textoSecc);
+                if (respGal.ok) cargarGaleriaCSV(await respGal.text());
+                else renderizarGaleria();
+            } catch (e) {
+                mostrarErro('Erro ao cargar CSVs: ' + e.message);
+                cargarExemplos();
+            }
+        }
+
+        /* -------------------------------------------------------
+           cargarConfigCSV / cargarContidoCSV / cargarSeccionsCSV
+           Parsean o CSV e poboan as variables globais.
+           ------------------------------------------------------- */
+        function cargarConfigCSV(texto) {
+            const result = parseCSV(texto);
+            cabeceirasConfig = result.cabeceiras;
+            const row = result.datos[0] || {};
+            configuracion = {
+                ticker_activo: row.ticker_activo || 'SI',
+                ticker: row.ticker || '',
+                hero_tipo: row.hero_tipo || 'A',
+                hero_titulo: row.hero_titulo || '',
+                hero_subtitulo: row.hero_subtitulo || '',
+                hero_imaxe: row.hero_imaxe || '',
+                hero_boton_texto: row.hero_boton_texto || '',
+                hero_boton_link: row.hero_boton_link || '',
+                hero_boton2_texto: row.hero_boton2_texto || '',
+                hero_boton2_link: row.hero_boton2_link || '',
+                hero_libro_titulo: row.hero_libro_titulo || '',
+                hero_libro_autor: row.hero_libro_autor || '',
+                hero_libro_cita: row.hero_libro_cita || '',
+                hero_libro_portada: row.hero_libro_portada || ''
+            };
+            ['hero_boton2_texto', 'hero_boton2_link'].forEach(function (k) {
+                if (cabeceirasConfig.indexOf(k) === -1) cabeceirasConfig.push(k);
+            });
+            cargarConfigEnForm();
+        }
+
+        function cargarContidoCSV(texto) {
+            const result = parseCSV(texto);
+            cabeceirasContido = result.cabeceiras;
+            contido = result.datos.map(function (row) {
+                const tipo = row.tipo || '';
+                if (tipo === 'libro') {
+                    return {
+                        tipo: 'libro',
+                        titulo: row.titulo || '',
+                        descricion: row.descricion || '',
+                        categoria: row.categoria || '',
+                        imaxe: row.imaxe || '',
+                        autor: row.autor || '',
+                        nivel: row.nivel || '',
+                        link: row.link || '#',
+                        favorito_de: row.favorito_de || '',
+                        destacado: row.destacado || 'NON',
+                        hero_destacado: row.hero_destacado || 'NON',
+                        orde: row.orde || '',
+                        activo: row.activo || 'SI',
+                        etiqueta: row.etiqueta || '',
+                        disponible: row.disponible || 'SI',
+                        cita: row.cita || ''
+                    };
+                }
+                if (tipo === 'evento') {
+                    return {
+                        tipo: 'evento',
+                        titulo: row.evento_titulo || row.titulo || '',
+                        descricion: row.descricion || '',
+                        autor: row.evento_autora || row.evento_autor || row.autor || '',
+                        data: row.evento_data || row.data || '',
+                        hora: row.evento_hora || row.hora || '',
+                        categoria: row.evento_categoria || row.categoria || '',
+                        imaxe: row.evento_imaxe || row.imaxe || '',
+                        destacado: row.evento_destacado || row.destacado || 'NON',
+                        hero_destacado: row.hero_destacado || 'NON',
+                        orde: row.orde || '',
+                        activo: row.activo || 'SI'
+                    };
+                }
+                return row;
+            });
+            renderizarLibros();
+            renderizarEventos();
+            renderizarSeccions();
+        }
+
+        function cargarSeccionsCSV(texto) {
+            const result = parseCSV(texto);
+            cabeceirasSeccions = result.cabeceiras;
+            seccions = result.datos.map(function (row) {
+                return {
+                    tipo_seccion: row.tipo_seccion || '',
+                    titulo: row.titulo || '',
+                    filtro_categoria: row.filtro_categoria || '',
+                    filtro_categoria2: row.filtro_categoria2 || '',
+                    idioma: row.idioma || '',
+                    etiqueta: row.etiqueta || '',
+                    orde: row.orde || '',
+                    activo: row.activo || 'SI',
+                    club_descricion: row.club_descricion || '',
+                    club_data: row.club_data || '',
+                    club_lectura_titulo: row.club_lectura_titulo || '',
+                    club_lectura_autor: row.club_lectura_autor || '',
+                    club_boton_texto: row.club_boton_texto || '',
+                    efemeride_variante: row.efemeride_variante || '',
+                    efemeride_descricion: row.efemeride_descricion || '',
+                    efemeride_data: row.efemeride_data || '',
+                    efemeride_etiqueta: row.efemeride_etiqueta || '',
+                    efemeride_texto_destacado: row.efemeride_texto_destacado || '',
+                efemeride_texto_secundario: row.efemeride_texto_secundario || '',
+                efemeride_imaxe: row.efemeride_imaxe || '',
+                efemeride_logo: row.efemeride_logo || '',
+                efemeride_programa: row.efemeride_programa || '',
+                efemeride_programa_titulo: row.efemeride_programa_titulo || ''
+                };
+            });
+            renderizarSeccions();
+        }
+
+        function cargarGaleriaCSV(texto) {
+            const result = parseCSV(texto);
+            cabeceirasGaleria = result.cabeceiras;
+            galeriaDatos = result.datos.map(function (row) {
+                return { directorio: row.directorio || '', titulo: row.titulo || '', descricion: row.descricion || '', url: row.url || '' };
+            });
+            renderizarGaleria();
+        }
+
+        /* -------------------------------------------------------
+           cargarConfigEnForm() / gardarConfigDesdeForm()
+           Sincronizan entre o obxecto configuracion e o formulario.
+           ------------------------------------------------------- */
+        function cargarConfigEnForm() {
+            var c = configuracion;
+            document.getElementById('hero_estilo').value = c.hero_tipo || 'A';
+            document.getElementById('hero_titulo').value = c.hero_titulo || '';
+            document.getElementById('hero_subtitulo').value = c.hero_subtitulo || '';
+            document.getElementById('hero_imaxe').value = c.hero_imaxe || '';
+            document.getElementById('hero_boton-texto').value = c.hero_boton_texto || '';
+            document.getElementById('hero_boton-link').value = c.hero_boton_link || '';
+            document.getElementById('hero_boton2-texto').value = c.hero_boton2_texto || '';
+            document.getElementById('hero_boton2-link').value = c.hero_boton2_link || '';
+            document.getElementById('hero_libro-titulo').value = c.hero_libro_titulo || '';
+            document.getElementById('hero_libro-autor').value = c.hero_libro_autor || '';
+            document.getElementById('hero_libro-cita').value = c.hero_libro_cita || '';
+            document.getElementById('hero_libro-portada').value = c.hero_libro_portada || '';
+            document.getElementById('ticker-input').value = c.ticker || '';
+            var tickerCheck = document.getElementById('ticker_activo_check');
+            if (tickerCheck) {
+                tickerCheck.checked = (c.ticker_activo && c.ticker_activo.toUpperCase() === 'SI');
+            }
+        }
+
+        function gardarConfigDesdeForm() {
+            configuracion.hero_tipo = document.getElementById('hero_estilo').value;
+            configuracion.hero_titulo = document.getElementById('hero_titulo').value;
+            configuracion.hero_subtitulo = document.getElementById('hero_subtitulo').value;
+            configuracion.hero_imaxe = converterURLDrive(document.getElementById('hero_imaxe').value);
+            configuracion.hero_boton_texto = document.getElementById('hero_boton-texto').value;
+            configuracion.hero_boton_link = document.getElementById('hero_boton-link').value;
+            configuracion.hero_boton2_texto = document.getElementById('hero_boton2-texto').value;
+            configuracion.hero_boton2_link = document.getElementById('hero_boton2-link').value;
+            configuracion.hero_libro_titulo = document.getElementById('hero_libro-titulo').value;
+            configuracion.hero_libro_autor = document.getElementById('hero_libro-autor').value;
+            configuracion.hero_libro_cita = document.getElementById('hero_libro-cita').value;
+            configuracion.hero_libro_portada = converterURLDrive(document.getElementById('hero_libro-portada').value);
+            configuracion.ticker = document.getElementById('ticker-input').value;
+            var tickerCheck = document.getElementById('ticker_activo_check');
+            configuracion.ticker_activo = tickerCheck ? (tickerCheck.checked ? 'SI' : 'NON') : 'SI';
+        }
+
+        /* -------------------------------------------------------
+           obterCategorias / obterIdiomas / obterEtiquetas
+           Extraen valores únicos do contido para os filtros.
+           ------------------------------------------------------- */
+        function obterCategorias() {
+            var categorias = contido.filter(function (item) { return item.tipo === 'libro'; })
+                .map(function (lib) { return lib.categoria; })
+                .filter(function (cat) { return cat && cat.trim() !== ''; });
+            /* separar valores múltiples con ; */
+            var individuais = [];
+            categorias.forEach(function (cat) {
+                cat.split(';').forEach(function (c) {
+                    var t = c.trim();
+                    if (t && individuais.indexOf(t) === -1) individuais.push(t);
+                });
+            });
+            return individuais.sort(function (a, b) { return a.localeCompare(b); });
+        }
+
+        function obterIdiomas() {
+            var idiomas = contido.filter(function (item) { return item.tipo === 'libro'; })
+                .map(function (lib) { return lib.idioma; })
+                .filter(function (idi) { return idi && idi.trim() !== ''; });
+            return [...new Set(idiomas)].sort();
+        }
+
+        function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+        function obterEtiquetas() {
+            return ['Novidade', 'Clásico', 'Recomendado', 'Favorito'];
+        }
+
+        function renderizarGaleria() {
+            var grid = document.getElementById('grid-galeria');
+            if (!grid) return;
+            var contador = document.getElementById('contador-galeria');
+            if (contador) contador.textContent = galeriaDatos.length + ' foto(s)';
+
+            if (!galeriaDatos.length) {
+                grid.innerHTML = '<div class="card-item" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--cor-texto-mutado);"><i class="fas fa-images" style="font-size:40px;display:block;margin-bottom:12px;"></i>Non hai fotos na galería. Fai clic en "Engadir foto".</div>';
+                return;
+            }
+
+            var directorios = {};
+            galeriaDatos.forEach(function (item, idx) {
+                var d = item.directorio || 'Xeral';
+                if (!directorios[d]) directorios[d] = [];
+                directorios[d].push({ item: item, idx: idx });
+            });
+
+            var html = '';
+            Object.keys(directorios).sort().forEach(function (dir) {
+                var imgs = directorios[dir];
+                var portada = imgs.length ? imgs[0].item : null;
+                var portadaImg = (portada && portada.url)
+                    ? '<img src="' + portada.url + '" alt="' + dir + '" class="preview-img">'
+                    : '<div class="preview-img" style="background:var(--bg-principal);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--cor-texto-mutado);"><i class="fas fa-image"></i></div>';
+
+                html += '<div class="card-item grupo-directorio">'
+                    + '<div class="card-header" style="cursor:pointer;" onclick="this.closest(\'.grupo-directorio\').classList.toggle(\'album-aberto\')"><div class="preview-wrap">' + portadaImg + '<span class="titulo"><strong>' + dir + '</strong> (' + imgs.length + ' foto' + (imgs.length !== 1 ? 's' : '') + ')</span></div>'
+                    + '<span class="album-toggle">▶</span></div>'
+                    + '<div class="card-body">'
+                    + '<div class="subgrid-fotos" id="subgrid-' + dir.replace(/\s+/g, '-') + '">';
+                imgs.forEach(function (obj) {
+                    var item = obj.item;
+                    var idx = obj.idx;
+                    var imgHtml = item.url
+                        ? '<img src="' + item.url + '" alt="' + item.titulo + '" class="preview-img">'
+                        : '<div class="preview-img" style="background:var(--bg-principal);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--cor-texto-mutado);"><i class="fas fa-image"></i></div>';
+                    html += '<div class="card-item subfoto" draggable="true" data-index="' + idx + '" data-tipo="galeria">'
+                        + '<div class="card-header"><div class="preview-wrap" style="width:100px;">' + imgHtml + '</div></div>'
+                        + '<div class="card-subbody">'
+                        + '<div class="editable-field"><label>Título</label><input type="text" value="' + (item.titulo || '') + '" data-campo="titulo" data-index="' + idx + '" data-tipo="galeria" /></div>'
+                        + '<div class="editable-field"><label>Descrición</label><input type="text" value="' + (item.descricion || '') + '" data-campo="descricion" data-index="' + idx + '" data-tipo="galeria" /></div>'
+                        + '<div class="editable-field"><label>URL</label><input type="text" value="' + (item.url || '') + '" data-campo="url" data-index="' + idx + '" data-tipo="galeria" /></div>'
+                        + '</div>'
+                        + '<div class="card-accions"><button class="btn-icon danger" data-accion="eliminar-galeria" data-index="' + idx + '"><i class="fas fa-trash"></i></button></div></div>';
+                });
+                html += '</div>' /* subgrid-fotos */
+                    + '<div class="engadir-url-rapido" data-directorio="' + dir + '">'
+                    + '<label>Engadir URL a <strong>' + dir + '</strong></label>'
+                    + '<div class="fila-input">'
+                    + '<input type="text" class="input-url-rapido" placeholder="https://... url da foto">'
+                    + '<button class="btn primario engadir-url-btn"><i class="fas fa-plus"></i> Engadir</button>'
+                    + '</div></div>'
+                    + '</div></div>';
+            });
+
+            grid.innerHTML = html;
+
+            /* editores en vivo */
+            grid.querySelectorAll('[data-tipo="galeria"]').forEach(function (el) {
+                if (el.tagName === 'INPUT') {
+                    el.addEventListener('change', function () {
+                        var idx = parseInt(this.dataset.index);
+                        var campo = this.dataset.campo;
+                        if (campo === 'url') this.value = converterURLDrive(this.value);
+                        if (galeriaDatos[idx]) galeriaDatos[idx][campo] = this.value;
+                        renderizarGaleria();
+                    });
+                }
+            });
+
+            /* eliminar */
+            grid.querySelectorAll('[data-accion="eliminar-galeria"]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var idx = parseInt(this.dataset.index);
+                    if (confirm('Eliminar esta foto?')) {
+                        galeriaDatos.splice(idx, 1);
+                        renderizarGaleria();
+                    }
+                });
+            });
+
+            /* engadir URL rápida */
+            grid.querySelectorAll('.engadir-url-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var cont = this.closest('.engadir-url-rapido');
+                    var dir = cont.dataset.directorio;
+                    var input = cont.querySelector('.input-url-rapido');
+                    var url = input ? input.value.trim() : '';
+                    if (!url) return;
+                    url = converterURLDrive(url);
+                    galeriaDatos.push({ directorio: dir, titulo: 'Nova foto', descricion: '', url: url });
+                    input.value = '';
+                    renderizarGaleria();
+                });
+            });
+        }
+
+        /* -------------------------------------------------------
+           renderizarLibros() / renderizarEventos() / renderizarSeccions()
+           Constrúen as tarxetas editables de cada pestana.
+           Cada tarxeta ten campos, botóns e selectores.
+           ------------------------------------------------------- */
+        function renderizarLibros() {
+            var grid = document.getElementById('grid-libros');
+            var contador = document.getElementById('contador-libros');
+            var destacadoInfo = document.getElementById('destacado-libro-info');
+            var librosArr = contido.filter(function (item) { return item.tipo === 'libro'; });
+            var destacado = librosArr.find(function (l) { return l.destacado && l.destacado.toUpperCase() === 'SI'; });
+            destacadoInfo.textContent = destacado ? '"' + destacado.titulo + '" (' + destacado.autor + ')' : 'Ningún';
+            contador.textContent = librosArr.length;
+            var etiquetas = obterEtiquetas();
+
+            if (!librosArr.length) {
+                grid.innerHTML = '<div class="empty-state"><i class="fas fa-book" style="font-size:32px;opacity:0.3;"></i><p>Non hai libros. Engade un!</p></div>';
+                return;
+            }
+
+            grid.innerHTML = librosArr.map(function (lib, idx) {
+                var imgHtml = lib.imaxe
+                    ? '<img src="' + escAttr(lib.imaxe) + '" alt="' + escAttr(lib.titulo) + '" class="preview-img" onclick="abrirSelectorImaxe(' + idx + ', \'libro\')">'
+                    : '<div class="preview-img" style="background:var(--bg-principal);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--cor-texto-mutado);" onclick="abrirSelectorImaxe(' + idx + ', \'libro\')"><i class="fas fa-image"></i></div>';
+                var destacadoBadge = lib.destacado && lib.destacado.toUpperCase() === 'SI' ? '<span class="badge destacado"><i class="fas fa-star"></i> Destacado</span>' : '';
+
+                var favoritosChiptHtml = '';
+                var favoritosValor = lib.favorito_de || '';
+                if (favoritosValor) {
+                    favoritosChiptHtml = favoritosValor.split(';').filter(function (f) { return f.trim(); }).map(function (f) {
+                        var fv = f.trim();
+                        return '<span class="chip-favorito">' + esc(fv) + '<button type="button" class="chip-remove" data-favorito="' + escAttr(fv) + '" data-index="' + idx + '">&times;</button></span>';
+                    }).join('');
+                }
+
+                return '<div class="card-item" draggable="true" data-index="' + idx + '" data-tipo="libro">'
+                    + '<div class="card-header"><div class="preview-wrap">' + imgHtml + '<span class="titulo">' + esc(lib.titulo) + '</span></div>'
+                    + '<div class="nivel-cabezal"><input type="text" value="' + escAttr(lib.nivel || '') + '" data-campo="nivel" data-index="' + idx + '" data-tipo="libro" class="nivel-input-mini" placeholder="Nivel"></div>'
+                    + destacadoBadge + '</div>'
+                    + '<div class="card-body">'
+                    + '<div class="editable-field"><label>Autor</label><input type="text" value="' + escAttr(lib.autor || '') + '" data-campo="autor" data-index="' + idx + '" data-tipo="libro" /></div>'
+                    + '<div class="editable-field"><label>Categoría</label><input type="text" value="' + escAttr(lib.categoria || '') + '" data-campo="categoria" data-index="' + idx + '" data-tipo="libro" /></div>'
+                    + '<div class="editable-field ancho-completo"><label>Favorito de</label>'
+                    + '<div class="favoritos-container">'
+                    + '<input type="hidden" value="' + escAttr(favoritosValor) + '" data-campo="favorito_de" data-index="' + idx + '" data-tipo="libro">'
+                    + '<div class="favoritos-chips">' + favoritosChiptHtml + '</div>'
+                    + '<div class="favoritos-add">'
+                    + '<select><option value="Profesor ">Profesor</option><option value="Profesora ">Profesora</option><option value="Alumno ">Alumno</option><option value="Alumna ">Alumna</option><option value="Convidado ">Convidado</option><option value="Convidada ">Convidada</option><option value="Familiar ">Familiar</option></select>'
+                    + '<input type="text" class="favorito-nome-input" placeholder="Nome">'
+                    + '<button type="button" class="btn-icon favorito-add-btn"><i class="fas fa-plus"></i></button>'
+                    + '</div></div></div>'
+                    + '<div class="editable-field"><label>Etiqueta</label><select data-campo="etiqueta" data-index="' + idx + '" data-tipo="libro">'
+                    + '<option value="">Sen etiqueta</option>'
+                    + etiquetas.map(function (et) { return '<option value="' + escAttr(et) + '" ' + (lib.etiqueta === et ? 'selected' : '') + '>' + esc(et) + '</option>'; }).join('')
+                    + '</select></div>'
+                    + '<div class="editable-field"><label>Dispoñible</label><select data-campo="disponible" data-index="' + idx + '" data-tipo="libro">'
+                    + '<option value="SI"' + (lib.disponible === 'SI' ? ' selected' : '') + '>Si</option>'
+                    + '<option value="NON"' + (lib.disponible === 'NON' ? ' selected' : '') + '>Inda non</option>'
+                    + '</select></div>'
+                    + '<div class="editable-field ancho-completo"><button type="button" class="btn-colapsable" data-target="cita-' + idx + '"><i class="fas fa-chevron-right"></i> Cita destacada</button>'
+                    + '<div class="colapsable-contido" id="cita-' + idx + '" style="display:none;"><textarea data-campo="cita" data-index="' + idx + '" data-tipo="libro" placeholder="Cita ou frase destacada do libro...">' + (lib.cita || '') + '</textarea></div></div>'
+                    + '<div class="editable-field ancho-completo"><button type="button" class="btn-colapsable" data-target="desc-' + idx + '"><i class="fas fa-chevron-right"></i> Sinopse</button>'
+                    + '<div class="colapsable-contido" id="desc-' + idx + '" style="display:none;"><textarea data-campo="descricion" data-index="' + idx + '" data-tipo="libro">' + (lib.descricion || '') + '</textarea></div></div>'
+                    + '</div>'
+                    + '<div class="card-accions">'
+                    + '<button class="btn-icon primary" data-accion="destacar-libro" data-index="' + idx + '"><i class="fas fa-star"></i></button>'
+                    + '<button class="btn-icon danger" data-accion="eliminar-libro" data-index="' + idx + '"><i class="fas fa-trash"></i></button>'
+                    + '<select class="select-orde" data-accion="orde-libro" data-index="' + idx + '">' + librosArr.map(function (_, i) { return '<option value="' + i + '" ' + (i === idx ? 'selected' : '') + '>' + (i + 1) + '</option>'; }).join('') + '</select>'
+                    + '</div></div>';
+            }).join('');
+            engadirEventosCards('libro');
+            engadirEditores('libro');
+        }
+
+        function renderizarEventos() {
+            var grid = document.getElementById('grid-eventos');
+            var contador = document.getElementById('contador-eventos');
+            var heroInfo = document.getElementById('hero_evento-info');
+            var eventosArr = contido.filter(function (item) { return item.tipo === 'evento'; });
+            var hero = eventosArr.find(function (e) { return e.hero_destacado && e.hero_destacado.toUpperCase() === 'SI'; });
+            heroInfo.textContent = hero ? '"' + hero.titulo + '"' + (hero.autor ? ' (' + hero.autor + ')' : '') : 'Ningún';
+            contador.textContent = eventosArr.length;
+
+            if (!eventosArr.length) {
+                grid.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-alt" style="font-size:32px;opacity:0.3;"></i><p>Non hai eventos. Engade un!</p></div>';
+                return;
+            }
+
+            grid.innerHTML = eventosArr.map(function (ev, idx) {
+                var imgHtml = ev.imaxe
+                    ? '<img src="' + escAttr(ev.imaxe) + '" alt="' + escAttr(ev.titulo) + '" class="preview-img" style="width:80px;height:60px;object-fit:cover;" onclick="abrirSelectorImaxe(' + idx + ', \'evento\')">'
+                    : '<div class="preview-img" style="width:80px;height:60px;background:var(--bg-principal);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--cor-texto-mutado);" onclick="abrirSelectorImaxe(' + idx + ', \'evento\')"><i class="fas fa-image"></i></div>';
+
+                return '<div class="card-item" draggable="true" data-index="' + idx + '" data-tipo="evento">'
+                    + '<div class="card-header"><div class="preview-wrap">' + imgHtml + '<span class="titulo">' + esc(ev.titulo) + '</span></div>'
+                    + (ev.hero_destacado && ev.hero_destacado.toUpperCase() === 'SI' ? '<span class="badge hero"><i class="fas fa-crown"></i> Hero</span>' : '')
+                    + (ev.destacado && ev.destacado.toUpperCase() === 'SI' ? '<span class="badge destacado"><i class="fas fa-star"></i> Destacado</span>' : '')
+                    + '</div>'
+                    + '<div class="card-body">'
+                    + '<div class="editable-field"><label>Autor</label><input type="text" value="' + escAttr(ev.autor || '') + '" data-campo="autor" data-index="' + idx + '" data-tipo="evento" /></div>'
+                    + '<div class="editable-field"><label>Data</label><input type="date" value="' + formatDateForInput(ev.data) + '" data-campo="data" data-index="' + idx + '" data-tipo="evento" /></div>'
+                    + '<div class="editable-field"><label>Hora</label><input type="time" value="' + escAttr((ev.hora || '').replace(/h$/i, '')) + '" data-campo="hora" data-index="' + idx + '" data-tipo="evento" /></div>'
+                    + '<div class="editable-field ancho-completo"><label>Descrición</label><textarea data-campo="descricion" data-index="' + idx + '" data-tipo="evento" style="width:100%;min-height:50px;resize:vertical;">' + (ev.descricion || '') + '</textarea></div>'
+                    + '<div class="editable-field"><label>Categoría</label><select data-campo="categoria" data-index="' + idx + '" data-tipo="evento">'
+                    + '<option value="Obradoiro" ' + (ev.categoria === 'Obradoiro' ? 'selected' : '') + '>Obradoiro</option>'
+                    + '<option value="Recital" ' + (ev.categoria === 'Recital' ? 'selected' : '') + '>Recital</option>'
+                    + '<option value="Club" ' + (ev.categoria === 'Club' ? 'selected' : '') + '>Club</option>'
+                    + '<option value="Charla" ' + (ev.categoria === 'Charla' ? 'selected' : '') + '>Charla</option>'
+                    + '<option value="Debate" ' + (ev.categoria === 'Debate' ? 'selected' : '') + '>Debate</option>'
+                    + '<option value="Outro" ' + (ev.categoria === 'Outro' ? 'selected' : '') + '>Outro</option>'
+                    + '</select></div>'
+                    + '</div>'
+                    + '<div class="card-accions">'
+                    + '<button class="btn-icon primary" data-accion="hero_evento" data-index="' + idx + '"><i class="fas fa-crown"></i></button>'
+                    + '<button class="btn-icon danger" data-accion="eliminar-evento" data-index="' + idx + '"><i class="fas fa-trash"></i></button>'
+                    + '<select class="select-orde" data-accion="orde-evento" data-index="' + idx + '">' + eventosArr.map(function (_, i) { return '<option value="' + i + '" ' + (i === idx ? 'selected' : '') + '>' + (i + 1) + '</option>'; }).join('') + '</select>'
+                    + '</div></div>';
+            }).join('');
+            engadirEventosCards('evento');
+            engadirEditores('evento');
+        }
+
+        function renderizarSeccions() {
+            var grid = document.getElementById('grid-seccions');
+            var categorias = obterCategorias();
+            var idiomas = obterIdiomas();
+            var etiquetasList = obterEtiquetas();
+
+            if (!seccions.length) {
+                grid.innerHTML = '<div class="empty-state"><i class="fas fa-sitemap" style="font-size:32px;opacity:0.3;"></i><p>Non hai seccións. Engade unha!</p></div>';
+                return;
+            }
+
+            var tiposBasicos = ['eventos', 'normas', 'galeria', 'contacto', 'preferidos', 'libro_mes'];
+            var nomeTipo = {
+                eventos: 'Axenda Cultural', normas: 'Normas', galeria: 'Galería',
+                contacto: 'Contacto', preferidos: 'Favoritos', libro_mes: 'Lectura do Mes',
+                carrusel: 'Carrusel', club: 'Club de Lectura',
+                bibliobenestar: 'BiblioBenestar', memoria: 'Memoria', planetario: 'Planetario',
+                subapartados: 'Subapartados',
+                efemeride: 'Efeméride'
+            };
+
+            var basicas = [];
+            var configurables = [];
+
+            seccions.forEach(function (sec, idx) {
+                sec._idx = idx;
+                if (tiposBasicos.indexOf(sec.tipo_seccion) > -1) {
+                    basicas.push(sec);
+                } else {
+                    configurables.push(sec);
+                }
+            });
+
+            var html = '';
+
+            if (basicas.length) {
+                html += '<div class="seccions-basicas-card"><div class="card-header"><span class="titulo">Seccións básicas</span></div><div class="seccions-basicas-grid">';
+                basicas.forEach(function (sec) {
+                    var idx = sec._idx;
+                    var activo = sec.activo && sec.activo.toUpperCase() === 'SI';
+                    var eImborrable = ['eventos', 'contacto', 'bibliobenestar', 'memoria', 'planetario', 'normas', 'club', 'galeria', 'preferidos'].indexOf(sec.tipo_seccion) > -1
+                        && seccions.findIndex(function (s) { return s.tipo_seccion === sec.tipo_seccion; }) === idx;
+                    var label = nomeTipo[sec.tipo_seccion] || sec.tipo_seccion;
+                    html += '<div class="basica-row" data-index="' + idx + '" data-tipo="seccion">'
+                        + '<span class="basica-label">' + label + '</span>'
+                        + '<input type="text" value="' + (sec.titulo || '').replace(/</g, '&lt;') + '" data-campo="titulo" data-index="' + idx + '" data-tipo="seccion" class="basica-titulo" />'
+                        + '<label class="toggle-switch"><input type="checkbox" ' + (activo ? 'checked' : '') + ' data-accion="toggle-seccion" data-index="' + idx + '" /><span class="toggle-slider"></span></label>'
+                        + (eImborrable ? '<span title="Sección básica" style="font-size:12px;opacity:0.3;flex-shrink:0;">🔒</span>' : '')
+                        + '<select class="select-orde" data-accion="orde-seccion" data-index="' + idx + '" style="flex-shrink:0;width:auto;">' + seccions.map(function (_, i) { return '<option value="' + i + '" ' + (i === idx ? 'selected' : '') + '>' + (i + 1) + '</option>'; }).join('') + '</select>'
+                        + '</div>';
+                });
+                html += '</div></div>';
+            }
+
+            if (configurables.length) {
+                configurables.forEach(function (sec) {
+                    var idx = sec._idx;
+                    var activo = sec.activo && sec.activo.toUpperCase() === 'SI';
+                    var badgeClass = activo ? '' : 'inactivo';
+                    var badgeText = activo ? 'Activo' : 'Inactivo';
+
+                    function selectCategorias(nomeCampo, valorActual) {
+                        var opcions = '<option value="">Todas</option>';
+                        categorias.forEach(function (cat) {
+                            opcions += '<option value="' + cat + '" ' + (valorActual === cat ? 'selected' : '') + '>' + cat + '</option>';
+                        });
+                        return '<select data-campo="' + nomeCampo + '" data-index="' + idx + '" data-tipo="seccion">' + opcions + '</select>';
+                    }
+                    function selectIdiomas(nomeCampo, valorActual) {
+                        var opcions = '<option value="">Todos</option>';
+                        idiomas.forEach(function (idi) {
+                            opcions += '<option value="' + idi + '" ' + (valorActual === idi ? 'selected' : '') + '>' + idi + '</option>';
+                        });
+                        return '<select data-campo="' + nomeCampo + '" data-index="' + idx + '" data-tipo="seccion">' + opcions + '</select>';
+                    }
+                    function selectEtiquetas(nomeCampo, valorActual) {
+                        var opcions = '<option value="">Sen etiqueta</option>';
+                        etiquetasList.forEach(function (et) {
+                            opcions += '<option value="' + et + '" ' + (valorActual === et ? 'selected' : '') + '>' + et + '</option>';
+                        });
+                        return '<select data-campo="' + nomeCampo + '" data-index="' + idx + '" data-tipo="seccion">' + opcions + '</select>';
+                    }
+
+                    var eImborrable = ['eventos', 'contacto', 'bibliobenestar', 'memoria', 'planetario', 'normas', 'club', 'galeria', 'preferidos'].indexOf(sec.tipo_seccion) > -1
+                        && seccions.findIndex(function (s) { return s.tipo_seccion === sec.tipo_seccion; }) === idx;
+                    var eSubapartados = sec.tipo_seccion === 'bibliobenestar' || sec.tipo_seccion === 'memoria' || sec.tipo_seccion === 'planetario' || sec.tipo_seccion === 'subapartados';
+                    var eCarrusel = sec.tipo_seccion === 'carrusel';
+                    var eClub = sec.tipo_seccion === 'club';
+                    var eEfemeride = sec.tipo_seccion === 'efemeride';
+                    var subapartadosValor = sec.filtro_categoria2 || '';
+
+                    html += '<div class="card-item" draggable="true" data-index="' + idx + '" data-tipo="seccion">'
+                        + '<div class="card-header"><span class="titulo">' + (sec.titulo || nomeTipo[sec.tipo_seccion] || 'Sen título') + '</span><span class="badge ' + badgeClass + '">' + badgeText + '</span>'
+                        + (eImborrable ? '<span class="badge" style="background:#7f8c8d;color:#fff;font-size:10px;margin-left:4px;">Básica</span>' : '')
+                        + '</div>'
+                        + '<div class="card-body">'
+                        + '<div class="editable-field"><label>Título</label><input type="text" value="' + (sec.titulo || '') + '" data-campo="titulo" data-index="' + idx + '" data-tipo="seccion" /></div>'
+                        + '<div class="editable-field"><label>Tipo</label><select data-campo="tipo_seccion" data-index="' + idx + '" data-tipo="seccion">'
+                        + '<option value="carrusel"' + (sec.tipo_seccion === 'carrusel' ? ' selected' : '') + '>Carrusel</option>'
+                        + '<option value="club"' + (sec.tipo_seccion === 'club' ? ' selected' : '') + '>Club de lectura</option>'
+                        + '<option value="bibliobenestar"' + (sec.tipo_seccion === 'bibliobenestar' ? ' selected' : '') + '>BiblioBenestar</option>'
+                        + '<option value="memoria"' + (sec.tipo_seccion === 'memoria' ? ' selected' : '') + '>Memoria</option>'
+                        + '<option value="planetario"' + (sec.tipo_seccion === 'planetario' ? ' selected' : '') + '>Planetario</option>'
+                        + '<option value="subapartados"' + (sec.tipo_seccion === 'subapartados' ? ' selected' : '') + '>Subapartados</option>'
+                        + '<option value="efemeride"' + (sec.tipo_seccion === 'efemeride' ? ' selected' : '') + '>Efeméride</option>'
+                        + '</select></div>'
+                        + (eCarrusel ? '<div class="editable-field"><label>Categoría</label>' + selectCategorias('filtro_categoria', sec.filtro_categoria || '') + '</div>'
+                            + '<div class="editable-field"><label>Categoría 2</label>' + selectCategorias('filtro_categoria2', sec.filtro_categoria2 || '') + '</div>'
+                            + '<div class="editable-field"><label>Idioma</label>' + selectIdiomas('idioma', sec.idioma || '') + '</div>'
+                            + '<div class="editable-field"><label>Etiqueta</label>' + selectEtiquetas('etiqueta', sec.etiqueta || '') + '</div>' : '')
+                        + (eSubapartados ? function () {
+                            var subData = [];
+                            try { subData = JSON.parse(subapartadosValor || '[]'); } catch (e) { }
+                            var itemsHtml = subData.map(function (s, si) {
+                                var iconSVGs = { shield: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', heart: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', users: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', clock: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', 'book-open': '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>', 'message-circle': '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>', sun: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>', rocket: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>', globe: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' };
+                                var ico = iconSVGs[s.icona] || iconSVGs.shield;
+                                var cat = s.filtro_categoria ? '<span class="sub-item-cat">' + s.filtro_categoria.replace(/</g, '&lt;') + '</span>' : '';
+                                return '<div class="sub-item">'
+                                    + '<span class="sub-item-icon">' + ico + '</span>'
+                                    + '<div class="sub-item-info"><span class="sub-item-titulo">' + (s.titulo || '').replace(/</g, '&lt;') + '</span>'
+                                    + (s.subtitulo ? '<span class="sub-item-sub">' + s.subtitulo.replace(/</g, '&lt;') + '</span>' : '')
+                                    + '</div>'
+                                    + (cat ? cat : '')
+                                    + '<button type="button" class="sub-item-remove" data-sub-index="' + si + '" data-index="' + idx + '" title="Eliminar">&times;</button>'
+                                    + '</div>';
+                            }).join('');
+                            var catOpts = '<option value="">Sen categoría</option>' + categorias.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+                            return '<div class="editable-field ancho-completo"><label>Subapartados</label>'
+                                + '<div class="subapartados-container">'
+                                + '<input type="hidden" value="' + subapartadosValor.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + '" data-campo="filtro_categoria2" data-index="' + idx + '" data-tipo="seccion">'
+                                + '<div class="sub-items-list">' + itemsHtml + '</div>'
+                                + '<button type="button" class="btn-icon btn-sub-apartados-add" data-index="' + idx + '" style="margin-top:6px;font-size:12px;"><i class="fas fa-plus-circle"></i> Engadir subapartado</button>'
+                                + '<div class="subapartados-add" style="display:none;">'
+                                + '<input type="text" class="sub-titulo-input" placeholder="Título" style="flex:1;min-width:100px;">'
+                                + '<input type="text" class="sub-subtitulo-input" placeholder="Subtítulo" style="flex:1;min-width:120px;">'
+                                + '<select class="sub-icona-select">'
+                                + '<option value="shield">Escudo</option><option value="heart">Corazón</option><option value="users">Usuarios</option>'
+                                + '<option value="clock">Reloxo</option><option value="book-open">Libro</option><option value="message-circle">Mensaxe</option>'
+                                + '<option value="sun">Sol</option><option value="rocket">Foguete</option><option value="globe">Globo</option>'
+                                + '</select>'
+                                + '<select class="sub-categoria-select">' + catOpts + '</select>'
+                                + '<button type="button" class="btn-icon sub-add-btn" data-index="' + idx + '"><i class="fas fa-check"></i></button>'
+                                + '<button type="button" class="btn-icon sub-cancel-btn" style="color:var(--cor-texto-mutado);"><i class="fas fa-times"></i></button>'
+                                + '</div></div></div>'
+                                + '<div style="font-size:11px;color:var(--cor-texto-mutado);margin-top:2px;">Cada subapartado filtra libros por categoría no carrusel.</div>';
+                        }() : '')
+                        + (eClub ? function () {
+                            var recData = [];
+                            try { recData = JSON.parse(subapartadosValor || '[]'); } catch (e) { }
+                            var chipsHtml = recData.map(function (r, ri) {
+                                var t = (r.titulo || '');
+                                if (r.url) t += ' · <span style="opacity:0.6;">' + r.url.replace(/</g, '&lt;') + '</span>';
+                                return '<span class="chip-favorito">' + t.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '<button type="button" class="rec-remove" data-rec-index="' + ri + '" data-index="' + idx + '">&times;</button></span>';
+                            }).join('');
+                            return '<div class="seccion-club-editor">'
+                                + '<div class="club-editor-grupo"><label>Descrición</label><textarea data-campo="club_descricion" data-index="' + idx + '" data-tipo="seccion" placeholder="Descrición do club..." style="width:100%;min-height:50px;resize:vertical;">' + (sec.club_descricion || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>'
+                                + '<div class="club-editor-grupo"><label>Data da sesión</label><input type="text" value="' + (sec.club_data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_data" data-index="' + idx + '" data-tipo="seccion" placeholder="Ex: 24 de Maio · 16:30h" /></div>'
+                                + '<div class="club-editor-fila"><div class="club-editor-grupo"><label>Lectura (título)</label><input type="text" value="' + (sec.club_lectura_titulo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_lectura_titulo" data-index="' + idx + '" data-tipo="seccion" placeholder="Título do libro" /></div>'
+                                + '<div class="club-editor-grupo"><label>Lectura (autor)</label><input type="text" value="' + (sec.club_lectura_autor || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_lectura_autor" data-index="' + idx + '" data-tipo="seccion" placeholder="Autor/a" /></div></div>'
+                                + '<div class="club-editor-grupo"><label>Texto do botón</label><input type="text" value="' + (sec.club_boton_texto || 'Incribirme').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_boton_texto" data-index="' + idx + '" data-tipo="seccion" /></div>'
+                                + '<div class="editable-field ancho-completo"><label>Recursos</label>'
+                                + '<div class="subapartados-container">'
+                                + '<input type="hidden" value="' + subapartadosValor.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + '" data-campo="filtro_categoria2" data-index="' + idx + '" data-tipo="seccion">'
+                                + '<div class="favoritos-chips">' + chipsHtml + '</div>'
+                                + '<button type="button" class="btn-icon btn-rec-add" data-index="' + idx + '" style="margin-top:4px;font-size:12px;"><i class="fas fa-plus-circle"></i> Engadir recurso</button>'
+                                + '<div class="subapartados-add" style="display:none;">'
+                                + '<input type="text" class="rec-titulo-input" placeholder="Título" style="flex:1;min-width:100px;">'
+                                + '<input type="text" class="rec-url-input" placeholder="URL" style="flex:2;min-width:140px;">'
+                                + '<select class="rec-icona-select">'
+                                + '<option value="book">Libro</option><option value="globe">Web</option><option value="external-link">Ligazón</option>'
+                                + '<option value="file-text">Documento</option><option value="video">Vídeo</option><option value="headphones">Audio</option>'
+                                + '</select>'
+                                + '<button type="button" class="btn-icon rec-add-btn" data-index="' + idx + '"><i class="fas fa-check"></i></button>'
+                                + '<button type="button" class="btn-icon rec-cancel-btn" style="color:var(--cor-texto-mutado);"><i class="fas fa-times"></i></button>'
+                                + '</div></div></div>'
+                                + '<div style="font-size:11px;color:var(--cor-texto-mutado);margin-top:2px;">Cada recurso: título, URL e icona.</div>'
+                        + '</div>';
+                        }() : '')
+                        + (eEfemeride ? function () {
+                            var efemVariante = sec.efemeride_variante || 'dia_do_libro';
+                            var efemOpcions = [
+                                ['dia_do_libro', 'Día do Libro'],
+                                ['dia_das_bibliotecas', 'Día das Bibliotecas'],
+                                ['dia_da_poesia', 'Día da Poesía'],
+                                ['mes_de_rosalia', 'Mes de Rosalía'],
+                                ['dia_das_letras', 'Día das Letras']
+                            ];
+                            var selOptions = efemOpcions.map(function (o) {
+                                return '<option value="' + o[0] + '" ' + (efemVariante === o[0] ? 'selected' : '') + '>' + o[1] + '</option>';
+                            }).join('');
+                            return '<div class="efemeride-editor">'
+                                + '<div class="editable-field"><label>Variante</label><select data-campo="efemeride_variante" data-index="' + idx + '" data-tipo="seccion">' + selOptions + '</select></div>'
+                                + '<div class="editable-field"><label>Data (ex: "23 de Abril")</label><input type="text" value="' + (sec.efemeride_data || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_data" data-index="' + idx + '" data-tipo="seccion" placeholder="Ex: 23 de Abril" /></div>'
+                                + '<div class="editable-field"><label>Etiqueta (ex: "Día Mundial do Libro")</label><input type="text" value="' + (sec.efemeride_etiqueta || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_etiqueta" data-index="' + idx + '" data-tipo="seccion" placeholder="Ex: Día Mundial do Libro" /></div>'
+                                + '<div class="editable-field"><label>Descrición</label><textarea data-campo="efemeride_descricion" data-index="' + idx + '" data-tipo="seccion" placeholder="Descrición..." style="width:100%;min-height:50px;resize:vertical;">' + (sec.efemeride_descricion || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>'
+                                + '<div class="editable-field"><label>Texto destacado / Poema</label><textarea data-campo="efemeride_texto_destacado" data-index="' + idx + '" data-tipo="seccion" placeholder="Frase principal ou estrofa de poema" style="width:100%;min-height:80px;resize:vertical;">' + (sec.efemeride_texto_destacado || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>'
+                                + '<div class="editable-field"><label>Texto secundario</label><input type="text" value="' + (sec.efemeride_texto_secundario || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_texto_secundario" data-index="' + idx + '" data-tipo="seccion" placeholder="Texto adicional" /></div>'
+                                + '<div class="editable-field"><label>Imaxe principal (opcional)</label><input type="text" value="' + (sec.efemeride_imaxe || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_imaxe" data-index="' + idx + '" data-tipo="seccion" placeholder="URL da foto (ex: homenaxeado) — baleiro = por defecto" /></div>'
+                                + '<div class="editable-field"><label>Logo cadrado ouro (opcional)</label><input type="text" value="' + (sec.efemeride_logo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_logo" data-index="' + idx + '" data-tipo="seccion" placeholder="URL do logo — baleiro = rag.png (Letras) / logo_b.png (outros)" /></div>'
+                                + '<div class="editable-field"><label>Título do modal (opcional)</label><input type="text" value="' + (sec.efemeride_programa_titulo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_programa_titulo" data-index="' + idx + '" data-tipo="seccion" placeholder="Programa de actividades" /></div>'
+                                + '<div class="editable-field"><label>Programa de actividades</label><textarea data-campo="efemeride_programa" data-index="' + idx + '" data-tipo="seccion" placeholder="Detalles do programa (saltos de liña, texto formatado...)" style="width:100%;min-height:80px;resize:vertical;">' + (sec.efemeride_programa || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div>'
+                                + '</div>';
+                        }() : '')
+                        + '</div>'
+                        + '<div class="card-accions">'
+                        + '<label class="toggle-switch"><input type="checkbox" ' + (activo ? 'checked' : '') + ' data-accion="toggle-seccion" data-index="' + idx + '" /><span class="toggle-slider"></span></label>'
+                        + (eImborrable ? '<span title="Sección básica: só desactivar" style="font-size:13px;opacity:0.4;cursor:help;">🔒</span>' : '<button class="btn-icon danger" data-accion="eliminar-seccion" data-index="' + idx + '"><i class="fas fa-trash"></i></button>')
+                        + '<select class="select-orde" data-accion="orde-seccion" data-index="' + idx + '">' + seccions.map(function (_, i) { return '<option value="' + i + '" ' + (i === idx ? 'selected' : '') + '>' + (i + 1) + '</option>'; }).join('') + '</select>'
+                        + '</div></div>';
+                });
+            }
+
+            grid.innerHTML = html;
+
+            engadirEventosCards('seccion');
+            engadirEditores('seccion');
+        }
+
+        /* -------------------------------------------------------
+           engadirEditores(tipo) — liga cambios dos inputs ós datos
+           Engade event listener "change" a inputs/selects/textarea.
+           ------------------------------------------------------- */
+        function engadirEditores(tipo) {
+            document.querySelectorAll('[data-tipo="' + tipo + '"]').forEach(function (el) {
+                if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+                    el.addEventListener('change', function () {
+                        const idx = parseInt(this.dataset.index);
+                        const campo = this.dataset.campo;
+                        let valor = this.value;
+                        if (campo === 'data' && this.type === 'date') {
+                            valor = formatDateFromInput(this.value);
+                        }
+                        if (campo === 'efemeride_imaxe' || campo === 'efemeride_logo') valor = converterURLDrive(valor);
+                        var arr = tipo === 'libro' ? contido.filter(function (i) { return i.tipo === 'libro'; }) :
+                            tipo === 'evento' ? contido.filter(function (i) { return i.tipo === 'evento'; }) :
+                            tipo === 'seccion' ? seccions : [];
+                        arr[idx][campo] = valor;
+                        if (tipo === 'libro') renderizarLibros();
+                        else if (tipo === 'evento') renderizarEventos();
+                        else if (tipo === 'seccion') renderizarSeccions();
+                    });
+                }
+            });
+        }
+
+        /* -------------------------------------------------------
+           abrirSelectorImaxe(idx, tipo) — cambia a URL da imaxe
+           Sen backend, pídese unha URL (Unsplash, Imgur, etc.)
+           ------------------------------------------------------- */
+        function abrirSelectorImaxe(idx, tipo) {
+            var arr = tipo === 'libro' ? contido.filter(function (i) { return i.tipo === 'libro'; }) :
+                tipo === 'evento' ? contido.filter(function (i) { return i.tipo === 'evento'; }) : [];
+            var item = arr[idx];
+            var url = prompt('URL da imaxe (Unsplash, Imgur, Google Drive...):', item.imaxe || 'https://');
+            if (url && url.trim()) {
+                item.imaxe = converterURLDrive(url.trim());
+                if (tipo === 'libro') renderizarLibros();
+                else renderizarEventos();
+            }
+        }
+
+        /* -------------------------------------------------------
+           engadirEventosCards(tipo) — eventos de cada tarxeta
+           Inclúe:
+             - Arrastre para reordenar (drag & drop)
+             - Botóns de acción (destacar, hero, eliminar, orde)
+           ------------------------------------------------------- */
+        function engadirEventosCards(tipo) {
+            var gridId = tipo === 'libro' ? 'grid-libros' :
+                tipo === 'evento' ? 'grid-eventos' : 'grid-seccions';
+            var grid = document.getElementById(gridId);
+            if (!grid) return;
+
+            grid.querySelectorAll('.card-item').forEach(function (card) {
+                var idx = parseInt(card.dataset.index);
+                card.addEventListener('dragstart', function (e) {
+                    e.dataTransfer.setData('text/plain', tipo + '-' + idx);
+                    card.classList.add('dragging');
+                });
+                card.addEventListener('dragend', function () { card.classList.remove('dragging'); });
+                card.addEventListener('dragover', function (e) { e.preventDefault(); card.classList.add('drag-over'); });
+                card.addEventListener('dragleave', function () { card.classList.remove('drag-over'); });
+                card.addEventListener('drop', function (e) {
+                    e.preventDefault();
+                    card.classList.remove('drag-over');
+                    var data = e.dataTransfer.getData('text/plain');
+                    if (!data.startsWith(tipo + '-')) return;
+                    var fromIdx = parseInt(data.split('-')[1]);
+                    if (fromIdx === idx) return;
+                    var arr = tipo === 'libro' ? contido.filter(function (i) { return i.tipo === 'libro'; }) :
+                        tipo === 'evento' ? contido.filter(function (i) { return i.tipo === 'evento'; }) :
+                        tipo === 'seccion' ? seccions : [];
+                    var item = arr.splice(fromIdx, 1)[0];
+                    arr.splice(idx, 0, item);
+                    if (tipo === 'seccion') arr.forEach(function (s, i) { s.orde = String(i + 1); });
+                    renderizarSegunTipo(tipo);
+                });
+            });
+
+            grid.querySelectorAll('[data-accion]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var accion = this.dataset.accion;
+                    var index = parseInt(this.dataset.index);
+                    var arr = tipo === 'libro' ? contido.filter(function (i) { return i.tipo === 'libro'; }) :
+                        tipo === 'evento' ? contido.filter(function (i) { return i.tipo === 'evento'; }) :
+                        tipo === 'seccion' ? seccions : [];
+                    var item = arr[index];
+
+                    switch (accion) {
+                        case 'destacar-libro':
+                            contido.filter(function (i) { return i.tipo === 'libro'; }).forEach(function (l) { l.destacado = 'NON'; });
+                            item.destacado = 'SI';
+                            renderizarLibros();
+                            break;
+                        case 'hero_evento':
+                            contido.filter(function (i) { return i.tipo === 'evento'; }).forEach(function (e) { e.hero_destacado = 'NON'; });
+                            item.hero_destacado = 'SI';
+                            renderizarEventos();
+                            break;
+                        case 'toggle-seccion':
+                            item.activo = this.checked ? 'SI' : 'NON';
+                            renderizarSeccions();
+                            break;
+                        case 'eliminar-libro':
+                            if (confirm('Eliminar "' + item.titulo + '"?')) {
+                                var i = contido.indexOf(item); if (i > -1) contido.splice(i, 1);
+                                renderizarLibros();
+                            }
+                            break;
+                        case 'eliminar-evento':
+                            if (confirm('Eliminar "' + item.titulo + '"?')) {
+                                var i = contido.indexOf(item); if (i > -1) contido.splice(i, 1);
+                                renderizarEventos();
+                            }
+                            break;
+                        case 'eliminar-seccion':
+                            if (confirm('Eliminar sección "' + item.titulo + '"?')) {
+                                var i = seccions.indexOf(item); if (i > -1) seccions.splice(i, 1);
+                                seccions.forEach(function (s, i) { s.orde = String(i + 1); });
+                                renderizarSeccions();
+                            }
+                            break;
+                        case 'orde-libro':
+                        case 'orde-evento':
+                        case 'orde-seccion':
+                            var newIdx = parseInt(this.value);
+                            if (newIdx !== index) {
+                                var moved = arr.splice(index, 1)[0];
+                                arr.splice(newIdx, 0, moved);
+                                if (tipo === 'seccion') arr.forEach(function (s, i) { s.orde = String(i + 1); });
+                                renderizarSegunTipo(tipo);
+                            }
+                            break;
+                    }
+                });
+            });
+
+            /* ---- Favorito add/remove (só libros) ---- */
+            if (tipo === 'libro') {
+                grid.querySelectorAll('.favorito-add-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var container = this.closest('.favoritos-container');
+                        var hiddenInput = container.querySelector('input[type="hidden"]');
+                        var select = container.querySelector('.favoritos-add select');
+                        var nameInput = container.querySelector('.favorito-nome-input');
+                        var idx = parseInt(hiddenInput.dataset.index);
+                        var prefix = select.value;
+                        var nome = nameInput.value.trim();
+                        if (!nome) { mostrarAviso('Escribe o nome da persoa', 'erro'); return; }
+                        var novo = prefix + nome;
+                        var arr = contido.filter(function (i) { return i.tipo === 'libro'; });
+                        var item = arr[idx];
+                        var actual = (item.favorito_de || '').split(';').map(function (f) { return f.trim(); }).filter(function (f) { return f; });
+                        if (actual.indexOf(novo) > -1) { mostrarAviso('Xa existe ese favorito', 'erro'); return; }
+                        actual.push(novo);
+                        item.favorito_de = actual.join('; ');
+                        renderizarLibros();
+                    });
+                });
+                grid.querySelectorAll('.chip-remove').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var idx = parseInt(this.dataset.index);
+                        var favorito = this.dataset.favorito;
+                        var arr = contido.filter(function (i) { return i.tipo === 'libro'; });
+                        var item = arr[idx];
+                        var actual = (item.favorito_de || '').split(';').map(function (f) { return f.trim(); }).filter(function (f) { return f; });
+                        item.favorito_de = actual.filter(function (f) { return f !== favorito; }).join('; ');
+                        renderizarLibros();
+                    });
+                });
+            }
+
+            /* ---- Subapartados add/remove (seccións) ---- */
+            if (tipo === 'seccion') {
+                grid.querySelectorAll('.sub-add-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var container = this.closest('.subapartados-container');
+                        var hiddenInput = container.querySelector('input[type="hidden"]');
+                        var tituloInput = container.querySelector('.sub-titulo-input');
+                        var subtituloInput = container.querySelector('.sub-subtitulo-input');
+                        var iconaSelect = container.querySelector('.sub-icona-select');
+                        var catSelect = container.querySelector('.sub-categoria-select');
+                        var idx = parseInt(this.dataset.index);
+                        var titulo = tituloInput.value.trim();
+                        if (!titulo) { mostrarAviso('Escribe o título', 'erro'); return; }
+                        var subtitulo = subtituloInput.value.trim();
+                        var icona = iconaSelect.value;
+                        var cat = catSelect.value;
+                        var sub = { titulo: titulo, subtitulo: subtitulo, icona: icona };
+                        if (cat) sub.filtro_categoria = cat;
+                        var arr = seccions;
+                        var actual = [];
+                        try { actual = JSON.parse(arr[idx].filtro_categoria2 || '[]'); } catch (e) { actual = []; }
+                        if (!Array.isArray(actual)) actual = [];
+                        actual.push(sub);
+                        arr[idx].filtro_categoria2 = JSON.stringify(actual);
+                        renderizarSeccions();
+                    });
+                });
+                grid.querySelectorAll('.sub-remove, .sub-item-remove').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var idx = parseInt(this.dataset.index);
+                        var subIdx = parseInt(this.dataset.subIndex);
+                        var arr = seccions;
+                        var actual = [];
+                        try { actual = JSON.parse(arr[idx].filtro_categoria2 || '[]'); } catch (e) { actual = []; }
+                        if (!Array.isArray(actual)) actual = [];
+                        actual.splice(subIdx, 1);
+                        arr[idx].filtro_categoria2 = JSON.stringify(actual);
+                        renderizarSeccions();
+                    });
+                });
+                grid.querySelectorAll('.btn-sub-apartados-add').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var container = this.closest('.subapartados-container');
+                        var form = container.querySelector('.subapartados-add');
+                        if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+                    });
+                });
+                grid.querySelectorAll('.sub-cancel-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var container = this.closest('.subapartados-container');
+                        var form = container.querySelector('.subapartados-add');
+                        if (form) { form.style.display = 'none'; form.querySelectorAll('input').forEach(function (i) { i.value = ''; }); }
+                    });
+                });
+                grid.querySelectorAll('.rec-add-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var container = this.closest('.subapartados-container');
+                        var tituloInput = container.querySelector('.rec-titulo-input');
+                        var urlInput = container.querySelector('.rec-url-input');
+                        var iconaSelect = container.querySelector('.rec-icona-select');
+                        var idx = parseInt(this.dataset.index);
+                        var titulo = tituloInput.value.trim();
+                        if (!titulo) { mostrarAviso('Escribe o título', 'erro'); return; }
+                        var url = urlInput.value.trim();
+                        var icona = iconaSelect.value;
+                        var rec = { titulo: titulo, url: url, icona: icona };
+                        var arr = seccions;
+                        var actual = [];
+                        try { actual = JSON.parse(arr[idx].filtro_categoria2 || '[]'); } catch (e) { actual = []; }
+                        if (!Array.isArray(actual)) actual = [];
+                        actual.push(rec);
+                        arr[idx].filtro_categoria2 = JSON.stringify(actual);
+                        renderizarSeccions();
+                    });
+                });
+                grid.querySelectorAll('.rec-remove').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var idx = parseInt(this.dataset.index);
+                        var recIdx = parseInt(this.dataset.recIndex);
+                        var arr = seccions;
+                        var actual = [];
+                        try { actual = JSON.parse(arr[idx].filtro_categoria2 || '[]'); } catch (e) { actual = []; }
+                        if (!Array.isArray(actual)) actual = [];
+                        actual.splice(recIdx, 1);
+                        arr[idx].filtro_categoria2 = JSON.stringify(actual);
+                        renderizarSeccions();
+                    });
+                });
+                grid.querySelectorAll('.btn-rec-add').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var container = this.closest('.subapartados-container');
+                        var form = container.querySelector('.subapartados-add');
+                        if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+                    });
+                });
+                grid.querySelectorAll('.rec-cancel-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var container = this.closest('.subapartados-container');
+                        var form = container.querySelector('.subapartados-add');
+                        if (form) { form.style.display = 'none'; form.querySelectorAll('input').forEach(function (i) { i.value = ''; }); }
+                    });
+                });
+            }
+
+            /* ---- Colapsables ---- */
+            grid.querySelectorAll('.btn-colapsable').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var targetId = this.dataset.target;
+                    var content = document.getElementById(targetId);
+                    if (content) {
+                        var isVisible = content.style.display !== 'none';
+                        content.style.display = isVisible ? 'none' : 'block';
+                        this.classList.toggle('activo');
+                    }
+                });
+            });
+        }
+
+        /* -------------------------------------------------------
+           renderizarSegunTipo(tipo) — re-renderiza segundo o tipo
+           ------------------------------------------------------- */
+        function renderizarSegunTipo(tipo) {
+            if (tipo === 'libro') renderizarLibros();
+            else if (tipo === 'evento') renderizarEventos();
+            else if (tipo === 'seccion') renderizarSeccions();
+        }
+
+        /* -------------------------------------------------------
+           mostrarErro / ocultarErro — avisos de erro no panel
+           ------------------------------------------------------- */
+        function mostrarErro(msg) {
+            var el = document.getElementById('erro-csv');
+            el.textContent = msg;
+            el.classList.add('visible');
+        }
+
+        function ocultarErro() {
+            document.getElementById('erro-csv').classList.remove('visible');
+        }
+
+        /* -------------------------------------------------------
+           gardarTodo() — envía os 3 CSVs ó servidor via POST /gardar
+           Converte os datos a CSV, serializa e fai fetch.
+           Se ok, recarga os datos do servidor.
+           ------------------------------------------------------- */
+        function obterSenha() {
+            var s = sessionStorage.getItem('senha_panel');
+            if (s) return s;
+            s = prompt('Contrasinal do panel:');
+            if (s) sessionStorage.setItem('senha_panel', s);
+            return s || '';
+        }
+
+        function mostrarAviso(msg, tipo) {
+            var div = document.getElementById('aviso-panel');
+            if (!div) {
+                div = document.createElement('div');
+                div.id = 'aviso-panel';
+                div.style.cssText = 'padding:12px 20px;border-radius:8px;margin-bottom:16px;font-weight:500;display:none;transition:all 0.3s;';
+                document.querySelector('.header-panel').after(div);
+            }
+            div.textContent = msg;
+            div.style.display = 'block';
+            div.style.background = tipo === 'success' ? '#e8f5e9' : '#fff3e0';
+            div.style.color = tipo === 'success' ? '#2e7d32' : '#e65100';
+            div.style.border = '1px solid ' + (tipo === 'success' ? '#a5d6a7' : '#ffcc80');
+            setTimeout(function () { div.style.display = 'none'; }, 4000);
+        }
+
+        async function gardarTodo() {
+            if (!confirm('Gardar os cambios? Os datos anteriores sobrescribiranse.\nFaise copia de seguridade automaticamente.')) return;
+
+            gardarConfigDesdeForm();
+
+            var configRow = Object.assign({}, configuracion);
+            var configCSV = objectToCSV(cabeceirasConfig.length ? cabeceirasConfig : Object.keys(configRow), [configRow]);
+
+            var cabeceirasCont = cabeceirasContido.length ? cabeceirasContido : [
+                'tipo', 'titulo', 'descricion', 'categoria', 'imaxe', 'data', 'hora', 'autor',
+                'nivel', 'link', 'favorito_de', 'destacado', 'hero_destacado', 'orde', 'activo',
+                'idioma', 'etiqueta', 'disponible', 'cita',
+                'evento_titulo', 'evento_autora', 'evento_data', 'evento_hora', 'evento_categoria', 'evento_imaxe', 'evento_destacado'
+            ];
+            var contidoCSV = objectToCSV(cabeceirasCont, normalizarContidoParaCSV(contido));
+
+            var cabeceirasSec = cabeceirasSeccions.length ? cabeceirasSeccions : [
+                'tipo_seccion', 'titulo', 'filtro_categoria', 'filtro_categoria2', 'idioma', 'etiqueta', 'orde', 'activo',
+                'club_descricion', 'club_data', 'club_lectura_titulo', 'club_lectura_autor', 'club_boton_texto',
+                'efemeride_variante', 'efemeride_data', 'efemeride_etiqueta', 'efemeride_descricion', 'efemeride_texto_destacado', 'efemeride_texto_secundario', 'efemeride_imaxe', 'efemeride_logo'
+            ];
+            var seccionsCSV = objectToCSV(cabeceirasSec, seccions);
+
+            var cabeceirasGal = cabeceirasGaleria.length ? cabeceirasGaleria : [
+                'directorio', 'titulo', 'descricion', 'url'
+            ];
+            var galeriaCSV = objectToCSV(cabeceirasGal, galeriaDatos);
+
+            try {
+                var url = _API_URL || '/gardar';
+                var headers = { 'Content-Type': 'application/json' };
+                var body = {
+                    configuracion: configCSV,
+                    contido: contidoCSV,
+                    seccions: seccionsCSV,
+                    galeria: galeriaCSV
+                };
+                if (_API_URL) {
+                    body.senha = obterSenha();
+                } else {
+                    headers['x-senha'] = obterSenha();
+                }
+                var resp = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(body)
+                });
+                var data = await resp.json();
+                if (resp.status === 401 || (data && data.erro === 'Non autorizado')) {
+                    sessionStorage.removeItem('senha_panel');
+                    alert('Contrasinal incorrecto.');
+                    return;
+                }
+                if (data && data.ok) {
+                    mostrarAviso('CSVs gardados correctamente. Faceuse copia de seguridade.', 'success');
+
+        /* -------------------------------------------------------
+           ARRANQUE — carga os datos ó abrir a páxina
+           ------------------------------------------------------- */
+        cargarDatosIniciais();
+                } else {
+                    alert('Erro ao gardar: ' + (data.erro || (data.erros || []).join(', ') || 'descoñecido'));
+                }
+            } catch (e) {
+                alert('Erro de comunicación co servidor: ' + e.message);
+            }
+        }
+
+        /* -------------------------------------------------------
+           NAVEGACIÓN POR TABS — cambio de pestana
+           ------------------------------------------------------- */
+        document.querySelectorAll('#tabs-container button').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('#tabs-container button').forEach(function (b) { b.classList.remove('activo'); });
+                this.classList.add('activo');
+                document.querySelectorAll('.panel-tab').forEach(function (p) { p.classList.remove('visible'); });
+                document.getElementById(this.dataset.tab).classList.add('visible');
+            });
+        });
+
+        /* -------------------------------------------------------
+           BOTÓN "Vista previa" — abre a web pública noutra lapela
+           ------------------------------------------------------- */
+        document.getElementById('btn-vista-previa').addEventListener('click', async function () {
+            if (confirm('Gardar cambios antes de ver a vista previa?')) {
+                await gardarTodo();
+            }
+            window.open('/index.html', '_blank');
+        });
+
+        document.getElementById('btn-cargar-datos').addEventListener('click', function () {
+            if (!confirm('Cargar CSVs manualmente?\n\n1. Selecciona configuracion.csv\n2. Selecciona contido.csv\n3. Selecciona seccions.csv\n4. (Opcional) Selecciona galeria.csv\n\nSó se recomenda para restaurar copias de seguridade.')) return;
+            var inputConfig = document.createElement('input');
+            inputConfig.type = 'file';
+            inputConfig.accept = '.csv';
+            inputConfig.onchange = function (e) {
+                var file = e.target.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function (ev) {
+                    try { cargarConfigCSV(ev.target.result); ocultarErro(); mostrarAviso('configuracion.csv cargado.', 'success'); } catch (err) { mostrarErro('Erro no configuracion.csv: ' + err.message); }
+                    var inputCont = document.createElement('input');
+                    inputCont.type = 'file';
+                    inputCont.accept = '.csv';
+                    inputCont.onchange = function (e2) {
+                        var f2 = e2.target.files[0];
+                        if (!f2) return;
+                        var r2 = new FileReader();
+                        r2.onload = function (ev2) {
+                            try { cargarContidoCSV(ev2.target.result); ocultarErro(); mostrarAviso('contido.csv cargado.', 'success'); } catch (err) { mostrarErro('Erro no contido.csv: ' + err.message); }
+                            var inputSec = document.createElement('input');
+                            inputSec.type = 'file';
+                            inputSec.accept = '.csv';
+                            inputSec.onchange = function (e3) {
+                                var f3 = e3.target.files[0];
+                                if (!f3) return;
+                                var r3 = new FileReader();
+                                r3.onload = function (ev3) {
+                                    try { cargarSeccionsCSV(ev3.target.result); ocultarErro(); mostrarAviso('seccions.csv cargado.', 'success'); } catch (err) { mostrarErro('Erro no seccions.csv: ' + err.message); }
+                                    var inputGal = document.createElement('input');
+                                    inputGal.type = 'file';
+                                    inputGal.accept = '.csv';
+                                    inputGal.onchange = function (e4) {
+                                        var f4 = e4.target.files[0];
+                                        if (!f4) return;
+                                        var r4 = new FileReader();
+                                        r4.onload = function (ev4) {
+                                            try { cargarGaleriaCSV(ev4.target.result); ocultarErro(); mostrarAviso('galeria.csv cargado. Todos os CSVs cargados correctamente.', 'success'); } catch (err) { mostrarErro('Erro no galeria.csv: ' + err.message); }
+                                        };
+                                        r4.readAsText(f4, 'UTF-8');
+                                    };
+                                    inputGal.click();
+                                };
+                                r3.readAsText(f3, 'UTF-8');
+                            };
+                            inputSec.click();
+                        };
+                        r2.readAsText(f2, 'UTF-8');
+                    };
+                    inputCont.click();
+                };
+                reader.readAsText(file, 'UTF-8');
+            };
+            inputConfig.click();
+        });
+
+        /* -------------------------------------------------------
+           BOTÓNS DE ENGANDE — libro, evento, sección
+           Engaden un elemento por defecto ó array e renderizan.
+           ------------------------------------------------------- */
+        document.getElementById('btn-engadir-libro').addEventListener('click', function () {
+            contido.push({
+                tipo: 'libro', titulo: 'Novo libro', autor: 'Autor',
+                imaxe: '', descricion: 'Descrición', categoria: 'Xeral',
+                nivel: '14+', link: '#', favorito_de: '',
+                        destacado: 'NON', hero_destacado: 'NON', etiqueta: '', disponible: 'SI',
+                        cita: ''
+            });
+            renderizarLibros();
+        });
+
+        document.getElementById('btn-engadir-evento').addEventListener('click', function () {
+            var hoxe = new Date();
+            var mes = ['Xan', 'Feb', 'Mar', 'Abr', 'Mai', 'Xuñ', 'Xul', 'Ago', 'Set', 'Out', 'Nov', 'Dec'][hoxe.getMonth()];
+            var dataStr = hoxe.getDate() + ' ' + mes + ' ' + hoxe.getFullYear();
+            contido.push({
+                tipo: 'evento', titulo: 'Novo evento', autor: 'Autor/a', descricion: '',
+                data: dataStr, hora: '12:00', categoria: 'Outro',
+                imaxe: '', destacado: 'NON', hero_destacado: 'NON'
+            });
+            renderizarEventos();
+        });
+
+        document.getElementById('btn-engadir-seccion').addEventListener('click', function () {
+            seccions.push({
+                tipo_seccion: 'carrusel', titulo: 'Nova sección',
+                filtro_categoria: '', filtro_categoria2: '', idioma: '', etiqueta: '',
+                orde: String(seccions.length + 1), activo: 'SI'
+            });
+            renderizarSeccions();
+        });
+
+        document.getElementById('btn-engadir-album').addEventListener('click', function () {
+            var nome = prompt('Nome do novo álbum:');
+            if (nome && nome.trim()) {
+                galeriaDatos.push({ directorio: nome.trim(), titulo: 'Novo álbum', descricion: '', url: '' });
+                renderizarGaleria();
+            }
+        });
+        document.getElementById('btn-engadir-foto-galeria').addEventListener('click', function () {
+            galeriaDatos.push({ directorio: 'Xeral', titulo: 'Nova foto', descricion: '', url: '' });
+            renderizarGaleria();
+        });
+
+        /* -------------------------------------------------------
+           BOTÓNS DE LIMPAR — destacado de libro e hero de evento
+           + botón principal de gardar
+           ------------------------------------------------------- */
+        document.getElementById('btn-limpar-destacado-libro').addEventListener('click', function () {
+            contido.filter(function (i) { return i.tipo === 'libro'; }).forEach(function (l) { l.destacado = 'NON'; });
+            renderizarLibros();
+        });
+
+        document.getElementById('btn-limpar-hero_evento').addEventListener('click', function () {
+            contido.filter(function (i) { return i.tipo === 'evento'; }).forEach(function (e) { e.hero_destacado = 'NON'; });
+            renderizarEventos();
+        });
+
+        document.getElementById('btn-gardar-todo').addEventListener('click', gardarTodo);
+
+        /* -------------------------------------------------------
+           cargarExemplos() — datos de exemplo embutidos
+           Úsase cando non se poden cargar os CSVs do servidor.
+           ------------------------------------------------------- */
+        function cargarExemplos() {
+            var configCSV = 'ticker_activo,ticker,hero_tipo,hero_titulo,hero_subtitulo,hero_imaxe,hero_boton_texto,hero_boton_link,hero_boton2_texto,hero_boton2_link,hero_libro_titulo,hero_libro_autor,hero_libro_cita,hero_libro_portada\n'
+                + 'SI,"📚 Benvidos á biblioteca · Novidades · Encontros · Obradoiros",B,"Un universo de historias","A biblioteca é un espazo vivo.",https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80,"Explorar",#seccion-eventos,"Recomendacións",#seccion-carrusel,"As Malas Mulleres","Marilar Aleixandre","«A literatura ten forza.»",https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80';
+
+            var contidoCSV = 'tipo,titulo,descricion,categoria,imaxe,data,hora,autor,nivel,link,favorito_de,destacado,hero_destacado,orde,activo,etiqueta,disponible,cita\n'
+                + 'libro,O clan da loba,"Mitoloxía galega e adolescentes.",Novela xuvenil,https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80,,,María Reimóndez,14+,#,,SI,,,Novidade,SI,\n'
+                + 'libro,A sombra do vento,"Misterio en Barcelona.",Novela histórica,https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=400&q=80,,,Carlos Ruiz Zafón,16+,#,,NON,,,Clásico,SI,\n'
+                + 'evento,Encontro literario con Ledicia Costas,,Obradoiro,https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80,12 Xuño 2026,11:30h,Ledicia Costas,,,,,SI,,,,';
+
+            var seccionsCSV = 'tipo_seccion,titulo,filtro_categoria,filtro_categoria2,idioma,etiqueta,orde,activo,club_descricion,club_data,club_lectura_titulo,club_lectura_autor,club_boton_texto,efemeride_variante,efemeride_descricion,efemeride_texto_destacado,efemeride_texto_secundario,efemeride_imaxe,efemeride_logo,efemeride_programa,efemeride_programa_titulo\n'
+                + 'eventos,Axenda Cultural,,,,1,SI,,,,,,,,,,,,,,,\n'
+                + 'carrusel,Novas Adquisicións,,,,2,SI,,,,,,,,,,,,,,,\n'
+                + 'carrusel,Recomendados polos profes,,,,3,SI,,,,,,,,,,,,,,,\n'
+                + 'libro_mes,Lectura do Mes,,,,4,SI,,,,,,,,,,,,,,,\n'
+                + 'club,Club de Lectura,,,,,"Un espazo de debate libre e relaxado para compartir ideas sobre os libros que nos moven.","24 de Maio · 16:30h","As malas mulleres","Marilar Aleixandre","Incribirme",5,SI,,,,,,,,,,,\n'
+                + 'normas,Normas de Préstamo,,,,6,SI,,,,,,,,,,,,,,,\n'
+                + 'galeria,Galería Visual,,,,7,SI,,,,,,,,,,,,,,,\n'
+                + 'contacto,Contacto e Formulario,,,,8,SI,,,,,,,,,,,,,,,\n'
+                + 'efemeride,Día da Poesía,,,,21,SI,,,,,,,,,,,dia_da_poesia,"A poesía invade cada recuncho da biblioteca.","«A poesia é a voz do que non ten nome»","Declamacións do alumnado.",,,"🕐 Recital poético — 10:00h<br>✍️ Obradoiro de haikus — 12:00h<br>🎭 Encontro con poeta local — 18:00h<br>🖼️ Exposición de poesía visual — todo o día","Poesía na Biblioteca"\n'
+                + 'efemeride,Mes de Rosalía,,,,22,SI,,,,,,,,,,,mes_de_rosalia,"Homenaxe á nosa poeta máis universal.","«Non teño, non, quen me defenda se non a miña garganta.»,","Lectura continuada da obra rosaliana.",,,"📖 Lectura continuada — 5 de febreiro<br>🌿 Obradoiro de poesía — 8 de marzo<br>🚶 Ruta literaria — 12 de abril<br>🌊 Exposición «Rosalía e o mar» — maio","Actos Rosalía"\n'
+                + 'efemeride,Día das Letras Galegas,,,,23,SI,,,,,,,,,,,dia_das_letras,"Homenaxe á nosa lingua e á súa literatura.","«A nosa fala é o noso mundo. Coidémola, celebrémola, compartámola.»","Actividades durante a semana das Letras.",,,"🎤 Recital poético — alumnado 4º ESO<br>🎨 Obradoiro de ilustración de carteis<br>📚 Exposición traballos sobre Castelao","Semana das Letras"\n'
+                + 'efemeride,Día do Libro,,,,,25,SI,,,,,,dia_do_libro,"Celebramos o Día do Libro con lecturas especiais.","«Os libros son espellos: neles vemos reflexado o que somos».","Todo o mes de abril, exposición temática.",,,,,';
+            var galeriaCSV = 'directorio,titulo,descricion,url\n'
+                + 'Maratón de lectura,Maratón de lectura,"Alumnado compartindo textos.",https://images.unsplash.com/photo-1526244434298-88fc74916d95?auto=format&fit=crop&w=600&q=80\n'
+                + 'Maratón de lectura,"Novos títulos manga","O andel máis concorrido.",https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=600&q=80';
+
+            cargarConfigCSV(configCSV);
+            cargarContidoCSV(contidoCSV);
+            cargarSeccionsCSV(seccionsCSV);
+            cargarGaleriaCSV(galeriaCSV);
+        }
+
+        /* -------------------------------------------------------
+           normalizarContidoParaCSV(items) — prepara os datos
+           para serializalos a CSV con cabeceiras unificadas.
+           ------------------------------------------------------- */
+        function normalizarContidoParaCSV(items) {
+            return items.map(function (item) {
+                if (item.tipo === 'libro') {
+                    return {
+                        tipo: 'libro', titulo: item.titulo || '', descricion: item.descricion || '',
+                        categoria: item.categoria || '', imaxe: item.imaxe || '', data: '', hora: '',
+                        autor: item.autor || '', nivel: item.nivel || '', link: item.link || '#',
+                        favorito_de: item.favorito_de || '', destacado: item.destacado || 'NON',
+                        hero_destacado: item.hero_destacado || 'NON', orde: item.orde || '',
+                        activo: item.activo || 'SI', idioma: item.idioma || '', etiqueta: item.etiqueta || '',
+                        disponible: item.disponible || 'SI', cita: item.cita || '',
+                        evento_titulo: '', evento_autor: '', evento_data: '', evento_hora: '',
+                        evento_categoria: '', evento_imaxe: '', evento_destacado: ''
+                    };
+                }
+                if (item.tipo === 'evento') {
+                    return {
+                        tipo: 'evento', titulo: '', descricion: item.descricion || '', categoria: '', imaxe: '',
+                        data: '', hora: '', autor: '', nivel: '', link: '', favorito_de: '',
+                        destacado: '', hero_destacado: item.hero_destacado || 'NON',
+                        orde: item.orde || '', activo: item.activo || 'SI', idioma: '',
+                        etiqueta: '', disponible: '', cita: '',
+                        evento_titulo: item.titulo || '', evento_autora: item.autor || '',
+                        evento_data: item.data || '', evento_hora: item.hora || '',
+                        evento_categoria: item.categoria || '', evento_imaxe: item.imaxe || '',
+                        evento_destacado: item.destacado || 'NON'
+                    };
+                }
+                return item;
+            });
+        }
+
+        cargarDatosIniciais();
+    </script>
+</body>
+
+</html>
