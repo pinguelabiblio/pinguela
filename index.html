@@ -106,6 +106,11 @@
         }
         .efemeride {
             animation: efemeride-aparecer 0.6s cubic-bezier(0.25,1,0.5,1) both;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+        .efemeride:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.08);
         }
         .efemeride:nth-child(2) { animation-delay: 0.1s; }
         .efemeride:nth-child(3) { animation-delay: 0.2s; }
@@ -898,7 +903,9 @@
             position: relative;
             z-index: 3;
             opacity: 0.12;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
+        .efemeride-libro:hover .efemeride-decor i { opacity: 0.28; transform: scale(1.12); }
         .efemeride-libro .efemeride-decor .particula-paxina {
             position: absolute;
             width: 16px;
@@ -1570,20 +1577,27 @@
             border-radius: 20px;
             font-size: 11px;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.2s, background 0.2s;
             font-family: inherit;
             letter-spacing: 0.06em;
             line-height: 1.6;
         }
-        .efemeride-ver-mais:hover { opacity: 1; }
+        .efemeride-ver-mais:hover { opacity: 1; background: rgba(128,128,128,0.06); transform: scale(1.02); }
+        .efemeride-ver-mais:active { transform: scale(0.96); }
         .efemeride-ver-mais-line { display: inline-flex; align-items: center; gap: 8px; }
         .efemeride-ver-mais-titulo { font-size: 12px; opacity: 0.55; font-weight: 500; letter-spacing: 0.04em; }
+        @keyframes modal-entrada {
+            0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
         #modal-programa.visible { display: flex; }
+        #modal-programa.visible .modal-contido { animation: modal-entrada 0.3s cubic-bezier(0.22,1,0.36,1) both; }
         #modal-programa .modal-contido { max-width: 580px; padding: 0; overflow: hidden; border: none; }
         .modal-programa-wrap {
-            box-shadow: 0 12px 50px rgba(0,0,0,0.25);
+            box-shadow: 0 16px 60px rgba(0,0,0,0.28);
             border-radius: 12px;
             background: var(--bg-superficie);
+            overflow: hidden;
         }
         .modal-programa-cabezal {
             background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-secundaria) 100%);
@@ -1602,20 +1616,20 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 60%);
+            background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.12) 0%, transparent 60%);
             pointer-events: none;
         }
         .modal-programa-cabezal i { font-size: 24px; opacity: 0.85; position: relative; z-index: 1; }
-        .modal-programa-cabezal h2 { margin: 0; font-size: 18px; font-weight: 700; position: relative; z-index: 1; text-shadow: 0 1px 3px rgba(0,0,0,0.15); }
-        .modal-programa-wrap .modal-pechar { color: rgba(255,255,255,0.75); top: 18px; right: 18px; z-index: 2; background: rgba(0,0,0,0.12); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 18px; line-height: 1; }
-        .modal-programa-wrap .modal-pechar:hover { color: #fff; background: rgba(0,0,0,0.25); transform: none; }
+        .modal-programa-cabezal h2 { margin: 0; font-size: 18px; font-weight: 700; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(0,0,0,0.18); }
+        .modal-programa-wrap .modal-pechar { color: rgba(255,255,255,0.75); top: 18px; right: 18px; z-index: 2; background: rgba(0,0,0,0.12); width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 18px; line-height: 1; transition: background 0.2s, transform 0.2s; }
+        .modal-programa-wrap .modal-pechar:hover { color: #fff; background: rgba(0,0,0,0.25); transform: rotate(90deg); }
         .modal-programa-contido {
             white-space: pre-line;
             line-height: 1.9;
             font-size: 15px;
             color: var(--texto-primario);
             padding: 28px 32px;
-            background: rgba(245,247,250,0.4);
+            background: rgba(245,247,250,0.5);
         }
 
         /* ============================================================
@@ -1673,6 +1687,7 @@
             position: relative;
             z-index: 2;
             flex: 1;
+            max-width: 42%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -1826,7 +1841,7 @@
             .efemeride-rosalia .efemeride-contido {
                 position: relative;
                 z-index: 2;
-                padding: 4px 0 16px;
+                padding: 4px 28% 16px 0;
             }
             .efemeride-rosalia .efemeride-imaxe {
                 position: absolute;
@@ -1854,18 +1869,18 @@
             .efemeride-rosalia .efemeride-titulo { font-size: clamp(18px, 4.5vw, 26px); }
             .efemeride-letras .efemeride-inner {
                 display: grid;
-                grid-template-columns: 1fr 48%;
+                grid-template-columns: 2fr 1fr;
                 grid-template-areas: "badge badge" "textos imaxe";
                 padding: 12px;
-                gap: 0;
+                gap: 8px;
                 min-height: auto;
             }
-            .efemeride-badge-letras { grid-area: badge; justify-self: center; margin: 0 0 6px; transform: none; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
+            .efemeride-badge-letras { grid-area: badge; justify-self: center; margin: 0 0 4px; transform: none; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
             .efemeride-badge-letras img { max-width: 90% !important; max-height: 90% !important; width: auto; height: auto; object-fit: contain; }
             .efemeride-badge-letras i { font-size: 24px; }
-            .efemeride-letras .efemeride-textos { grid-area: textos; padding: 10px; }
+            .efemeride-letras .efemeride-textos { grid-area: textos; padding: 8px; max-width: 100%; }
             .efemeride-letras .efemeride-textos .efemeride-destacado { max-width: 100%; }
-            .efemeride-letras .efemeride-imaxe { grid-area: imaxe; align-self: center; height: auto; max-height: 180px; }
+            .efemeride-letras .efemeride-imaxe { grid-area: imaxe; align-self: center; height: auto; max-height: none; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
             .efemeride-letras .efemeride-imaxe::before { inset: 3px; }
             .efemeride-letras .efemeride-imaxe::after { display: none; }
             .efemeride-destacado { font-size: 14px; padding: 8px 10px; }
@@ -1881,8 +1896,10 @@
             .efemeride .efemeride-inner { min-height: auto; padding: 8px; gap: 4px; }
             .efemeride-poesia .efemeride-inner { grid-template-columns: 1fr 30%; gap: 6px; padding: 8px; }
             .efemeride-rosalia .efemeride-imaxe { width: 24%; max-height: 130px; }
-            .efemeride-letras .efemeride-inner { grid-template-columns: 1fr 42%; gap: 0; padding: 8px; }
-            .efemeride-letras .efemeride-textos { padding: 6px; }
+            .efemeride-letras .efemeride-inner { display: grid; grid-template-columns: 2fr 1fr; grid-template-areas: "badge badge" "textos imaxe"; gap: 6px; padding: 8px; min-height: auto; }
+            .efemeride-badge-letras { grid-area: badge; justify-self: center; margin: 0 0 4px; transform: none; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
+            .efemeride-letras .efemeride-textos { grid-area: textos; padding: 4px; max-width: 100%; }
+            .efemeride-letras .efemeride-imaxe { grid-area: imaxe; align-self: center; height: auto; max-height: none; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
         }
 
         .seccion-titulo-liña {
@@ -3808,12 +3825,29 @@
             <div class="buscador-resultados" id="buscador-resultados"></div>
         </div>
     </div>
-<!-- <script>
-    window._API_URL = 'https://script.google.com/macros/s/AKfycbwxW3WPyIibpWEwqoh-ohGhn1IevoV8kZYEqa8SZUrtwWXS0A993KN-g6c6Ln6cfSwo/exec';
-</script> -->
+
+    <!--
+    ================================================================
+    CONFIGURACIÓN DA CARGA DE DATOS
+    ================================================================
+    Descomenta o que corresponda segundo o teu despregue:
+
+      A) Google Sheets API directa (máis rápida):
+         - Necesitas unha API Key de Google Cloud con acceso a Sheets API
+         - Asigna a túa chave a window._SHEETS_KEY
+
+      B) Worker / Proxy (Cloudflare Worker ou Apps Script):
+         - O worker recibe ?sheet=nome e devolve CSV
+         - Asigna a URL a window._API_URL
+
+      C) CSVs locais (sen backend):
+         - Non definas ningunha variable, o código le os CSVs de /datos/
+
+    Orde de carga: Sheets API → Worker → CSVs locais → Exemplos fixos
+    ================================================================ -->
     <script>
-        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE'; // Google Sheets API v4 (directo, rápido)
-        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/'; // Fallback: worker
+        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
 
     <!-- ============================================================
@@ -3924,12 +3958,23 @@
         const _SHEETS_KEY = window._SHEETS_KEY || null;
         const SHEET_ID = '159cNjgHw2BNr20nhxEqophX3RRtWjdmokDWoWz5mBw0';
 
+        /* -------------------------------------------------------
+           apiURL(sheet) → URL do CSV segundo o modo de despregue
+           - Se _SHEETS_KEY está definido: Google Sheets API v4
+           - Se _API_URL está definido: worker proxy
+           - Senón: CSVs locais en /datos/
+           ------------------------------------------------------- */
         function apiURL(sheet) {
             if (_SHEETS_KEY) return 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + '/values/' + encodeURIComponent(sheet) + '?key=' + _SHEETS_KEY;
             if (_API_URL) return _API_URL + '?sheet=' + sheet;
             return '/datos/' + sheet + '.csv';
         }
 
+        /* -------------------------------------------------------
+           fetchSheet(sheet) — obtén CSV desde Google Sheets API
+           A Sheets API devolve JSON, esta función converte a CSV
+           para que procesarCSVs() o trate igual que os outros.
+           ------------------------------------------------------- */
         async function fetchSheet(sheet) {
             if (_SHEETS_KEY) {
                 const r = await fetch(apiURL(sheet));
@@ -3992,6 +4037,11 @@
             } catch (e) {}
         }
 
+        /* -------------------------------------------------------
+           procesarCSVs(responses) — transforma 4 CSVs en datos globais
+           Recibe un array de 4 Response (config, contido, seccions, galeria)
+           e enche as variables: configuracion, libros, eventos, seccions
+           ------------------------------------------------------- */
         async function procesarCSVs(responses) {
             const [rCfg, rCont, rSec, rGal] = responses;
             const cfg = (parseCSV(await rCfg.text())).datos[0] || {};
@@ -4057,9 +4107,19 @@
             }
         }
 
+        /* -------------------------------------------------------
+           cargarDatos() — carga os datos con fallback multi-nivel
+           Orde de intentos:
+             1. Google Sheets API directa (se _SHEETS_KEY está definido)
+             2. Worker proxy (se _API_URL está definido)
+             3. CSVs locais en /datos/
+             4. Exemplos fixos (último recurso)
+           ------------------------------------------------------- */
         async function cargarDatos() {
             if (cargarCache()) renderizarTodo();
 
+            /* completar() — chámase tras obter datos correctamente.
+               Se algunha lista está baleira, pon exemplos por defecto. */
             function completar() {
                 if (!libros.length) { libros = [{ titulo: 'Exemplo', autor: 'Autor', imaxe: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80', descricion: 'Descrición', categoria: 'Novela', nivel: '14+', link: '#', favorito_de: '', etiqueta: 'Novidade', disponible: 'SI', cita: '' }]; }
                 if (!eventos.length) { eventos = [{ titulo: 'Evento exemplo', autor: 'Autora', data: '12 Maio 2026', hora: '11:30h', categoria: 'Obradoiro', imaxe: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80', destacado: 'SI', hero_destacado: 'NON', descricion: 'Descrición do evento' }]; }
@@ -4085,14 +4145,15 @@
                 } catch (e) { /* fallback ao worker */ }
             }
 
-            // 2. Fallback: worker + Apps Script (se Sheets API falla)
+            // 2. Fallback: worker proxy (se Sheets API falla ou non está configurada)
             if (_API_URL) {
                 try {
+                    const base = _API_URL.replace(/\/+$/, '');
                     const r = await Promise.all([
-                        fetch(apiURL('configuracion')),
-                        fetch(apiURL('contido')),
-                        fetch(apiURL('seccions')),
-                        fetch(apiURL('galeria'))
+                        fetch(base + '?sheet=configuracion'),
+                        fetch(base + '?sheet=contido'),
+                        fetch(base + '?sheet=seccions'),
+                        fetch(base + '?sheet=galeria')
                     ]);
                     if (r.every(x => x.ok)) {
                         libros = []; eventos = [];
@@ -5057,6 +5118,11 @@
             return html;
         }
 
+        /* -------------------------------------------------------
+           xerarEfemeride(secc) — xera o HTML dun banner efeméride
+           Cada variante ten: cor, icona, data, e deseño específico.
+           Soporta 5 tipos: libro, poesia, rosalia, letras, bibliotecas.
+           ------------------------------------------------------- */
         function xerarEfemeride(secc) {
             var variante = secc.efemeride_variante || 'dia_do_libro';
             var descricion = secc.efemeride_descricion || '';
@@ -5066,6 +5132,10 @@
             var programa = secc.efemeride_programa || '';
             var programaTitulo = secc.efemeride_programa_titulo || '';
 
+            /* btnProg(tituloAttr, centro) → xera o botón "Ver máis"
+               - Só se mostra se "programa" ten contido
+               - Se "programaTitulo" está definido, móstrase en liña co botón
+               - tituloAttr: '' (normal), 'esq' (flex-start), centro (text-align) */
             function btnProg(tituloAttr, centro) {
                 if (!programa) return '';
                 var tituloHtml = programaTitulo ? '<span class="efemeride-ver-mais-titulo">' + esc(programaTitulo) + '</span>' : '';
@@ -5151,7 +5221,7 @@
                     + '<div class="efemeride-contido">'
                     + db + et
                     + '<h2 class="efemeride-titulo">' + esc(titulo) + '</h2>'
-                    + desc + dest + secu
+                    + desc + dest + secu + progBtn
                     + '</div></div></section>';
             }
 
@@ -5266,27 +5336,30 @@
         function inicializarDragSliders() {
             if (!window._dragSlidersInit) {
                 window._dragSlidersInit = true;
-                var isDown = false, startX = 0, scrollLeft = 0, trackAtual = null;
-                window.addEventListener('mouseup', function () { if (trackAtual) { isDown = false; trackAtual.style.cursor = 'grab'; trackAtual = null; } });
-                window.addEventListener('touchend', function () { if (trackAtual) { isDown = false; trackAtual.style.cursor = 'grab'; trackAtual = null; } }, { passive: true });
+                window._ds = { isDown: false, startX: 0, scrollLeft: 0, trackAtual: null };
+                var s = window._ds;
+                window.addEventListener('mouseup', function () { if (s.trackAtual) { s.isDown = false; s.trackAtual.style.cursor = 'grab'; s.trackAtual = null; } });
+                window.addEventListener('touchend', function () { if (s.trackAtual) { s.isDown = false; s.trackAtual.style.cursor = 'grab'; s.trackAtual = null; } }, { passive: true });
                 window.addEventListener('mousemove', function (e) {
-                    if (!isDown || !trackAtual) return;
-                    var x = e.pageX - trackAtual.offsetLeft;
-                    trackAtual.scrollLeft = scrollLeft - (x - startX) * 1.5;
+                    if (!s.isDown || !s.trackAtual) return;
+                    var x = e.pageX - s.trackAtual.offsetLeft;
+                    s.trackAtual.scrollLeft = s.scrollLeft - (x - s.startX) * 1.5;
+                    e.preventDefault();
+                });
+                document.addEventListener('mousedown', function (e) {
+                    var track = e.target.closest('.carrusel-track');
+                    if (!track) return;
+                    s.isDown = true;
+                    s.trackAtual = track;
+                    track.style.cursor = 'grabbing';
+                    s.startX = e.pageX - track.offsetLeft;
+                    s.scrollLeft = track.scrollLeft;
                     e.preventDefault();
                 });
             }
-            document.querySelectorAll('.carrusel-track').forEach(function (track) {
-                track.addEventListener('mousedown', function (e) {
-                    isDown = true;
-                    trackAtual = track;
-                    track.style.cursor = 'grabbing';
-                    startX = e.pageX - track.offsetLeft;
-                    scrollLeft = track.scrollLeft;
-                    e.preventDefault();
-                });
-            });
             document.querySelectorAll('.carrusel-izq, .carrusel-der').forEach(function (btn) {
+                if (btn.dataset.dsInit) return;
+                btn.dataset.dsInit = '1';
                 btn.addEventListener('click', function () {
                     const track = document.getElementById(this.dataset.target);
                     if (!track) return;
@@ -5306,12 +5379,16 @@
                 });
             });
             document.querySelectorAll('.card-libro-netflix, .card-libro-profesor, .card-preferido').forEach(function (card) {
+                if (card.dataset.dsInit) return;
+                card.dataset.dsInit = '1';
                 card.addEventListener('click', function () {
                     const data = this.dataset.libro;
                     if (data) try { abrirModal(JSON.parse(data)); } catch (e) { }
                 });
             });
             document.querySelectorAll('.cartel-evento, .card-menor').forEach(function (card) {
+                if (card.dataset.dsInit) return;
+                card.dataset.dsInit = '1';
                 card.addEventListener('click', function () {
                     const data = this.dataset.evento;
                     if (data) try { abrirModalEvento(JSON.parse(data)); } catch (e) { }
@@ -5344,6 +5421,11 @@
             }
         }
 
+        /* -------------------------------------------------------
+           abrirModalPrograma(contenido, titulo) — modal do programa
+           Insire o contido con innerHTML (permite <br>, negriñas).
+           O título personalizable ven de efemeride_programa_titulo.
+           ------------------------------------------------------- */
         function abrirModalPrograma(contenido, titulo) {
             var modal = document.getElementById('modal-programa');
             var body = document.getElementById('modal-programa-contido');
