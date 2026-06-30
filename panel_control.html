@@ -1039,6 +1039,7 @@
             <button data-tab="tab-eventos"><i class="fas fa-calendar-alt"></i> Eventos</button>
             <button data-tab="tab-seccions"><i class="fas fa-sitemap"></i> Seccións</button>
             <button data-tab="tab-galeria"><i class="fas fa-images"></i> Galería</button>
+            <button data-tab="tab-recursos"><i class="fas fa-link"></i> Recursos</button>
         </div>
 
         <!-- ========================================================
@@ -1145,6 +1146,17 @@
         </div>
 
         <!-- ========================================================
+             PANEL: RECURSOS EN LIÑA (xestión de recursos externos)
+             ======================================================== -->
+        <div class="panel-tab" id="tab-recursos">
+            <div class="flex-between">
+                <span class="info"><i class="fas fa-link"></i> <strong>Recursos en Liña</strong> <span id="contador-recursos"></span></span>
+                <button class="btn primario" id="btn-engadir-recurso"><i class="fas fa-plus"></i> Engadir recurso</button>
+            </div>
+            <div class="grid-cards" id="grid-recursos"></div>
+        </div>
+
+        <!-- ========================================================
              FOOTER DO PANEL
              ======================================================== -->
         <div style="background:var(--bg-superficie);border-radius:var(--radius-medio);border:var(--bordo-fino);padding:16px 20px;margin-bottom:24px;font-size:14px;color:var(--cor-texto-mutado);">
@@ -1163,7 +1175,7 @@
     </div>
 
     <script>
-         window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
         window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
 
@@ -1297,6 +1309,7 @@
         var contido = [];
         var seccions = [];
         var galeriaDatos = [];
+        var recursos = [];
         var cabeceirasConfig = [], cabeceirasContido = [], cabeceirasSeccions = [], cabeceirasGaleria = [];
         var _API_URL = window._API_URL || null;
         var _SHEETS_KEY = window._SHEETS_KEY || null;
@@ -1385,10 +1398,13 @@
                 hero_libro_cita: row.hero_libro_cita || '',
                 hero_libro_portada: row.hero_libro_portada || ''
             };
+            try { recursos = JSON.parse(row.recursos || '[]'); } catch (e) { recursos = []; }
+            if (!Array.isArray(recursos)) recursos = [];
             ['hero_boton2_texto', 'hero_boton2_link'].forEach(function (k) {
                 if (cabeceirasConfig.indexOf(k) === -1) cabeceirasConfig.push(k);
             });
             cargarConfigEnForm();
+            renderizarRecursos();
         }
 
         function cargarContidoCSV(texto) {
@@ -1555,6 +1571,97 @@
 
         function obterEtiquetas() {
             return ['Novidade', 'Clásico', 'Recomendado', 'Favorito'];
+        }
+
+        function renderizarRecursos() {
+            var grid = document.getElementById('grid-recursos');
+            if (!grid) return;
+            var contador = document.getElementById('contador-recursos');
+            if (contador) contador.textContent = recursos.length + ' recurso(s)';
+
+            if (!recursos.length) {
+                grid.innerHTML = '<div class="card-item" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--cor-texto-mutado);"><i class="fas fa-link" style="font-size:40px;display:block;margin-bottom:12px;"></i>Non hai recursos. Fai clic en "Engadir recurso".</div>';
+                return;
+            }
+
+            var iconSVG = {
+                book: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+                globe: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+                'external-link': '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+                'file-text': '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+                video: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>',
+                headphones: '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>'
+            };
+            var iconNames = {
+                book: 'Libro', globe: 'Web', 'external-link': 'Ligazón',
+                'file-text': 'Documento', video: 'Vídeo', headphones: 'Audio'
+            };
+
+            var html = '';
+            recursos.forEach(function (r, i) {
+                var ico = iconSVG[r.icona] || iconSVG['external-link'];
+                var icoNome = iconNames[r.icona] || 'Ligazón';
+                html += '<div class="card-item" data-index="' + i + '">'
+                    + '<div class="card-header">'
+                    + '<div class="preview-wrap" style="gap:12px;">'
+                    + '<div style="flex-shrink:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--primaria);color:#fff;">' + ico + '</div>'
+                    + '<div><span class="titulo">' + esc(r.titulo) + '</span><br><span style="font-size:12px;color:var(--cor-texto-mutado);">' + esc(r.url || '') + '</span></div>'
+                    + '</div>'
+                    + '<span class="badge">' + icoNome + '</span>'
+                    + '</div>'
+                    + '<div class="card-body">'
+                    + '<div class="editable-field"><label>Título</label><input type="text" value="' + escAttr(r.titulo) + '" data-rec-campo="titulo" data-index="' + i + '" /></div>'
+                    + '<div class="editable-field"><label>URL</label><input type="text" value="' + escAttr(r.url) + '" data-rec-campo="url" data-index="' + i + '" /></div>'
+                    + '<div class="editable-field"><label>Icona</label><select data-rec-campo="icona" data-index="' + i + '" style="padding:6px 10px;border:var(--bordo-fino);border-radius:var(--radius-baixo);font-family:inherit;font-size:14px;">'
+                    + '<option value="book"' + (r.icona === 'book' ? ' selected' : '') + '>Libro</option>'
+                    + '<option value="globe"' + (r.icona === 'globe' ? ' selected' : '') + '>Web</option>'
+                    + '<option value="external-link"' + (r.icona === 'external-link' ? ' selected' : '') + '>Ligazón</option>'
+                    + '<option value="file-text"' + (r.icona === 'file-text' ? ' selected' : '') + '>Documento</option>'
+                    + '<option value="video"' + (r.icona === 'video' ? ' selected' : '') + '>Vídeo</option>'
+                    + '<option value="headphones"' + (r.icona === 'headphones' ? ' selected' : '') + '>Audio</option>'
+                    + '</select></div>'
+                    + '</div>'
+                    + '<div class="card-accions">'
+                    + '<button class="btn-icon danger" data-accion="eliminar-recurso" data-index="' + i + '"><i class="fas fa-trash"></i></button>'
+                    + '<button class="btn-icon primary" data-accion="probar-recurso" data-index="' + i + '" style="margin-left:auto;"><i class="fas fa-external-link-alt"></i> Probar</button>'
+                    + '</div></div>';
+            });
+            grid.innerHTML = html;
+
+            /* Eventos dos inputs dos recursos */
+            grid.querySelectorAll('[data-rec-campo]').forEach(function (el) {
+                el.addEventListener('change', function () {
+                    var i = parseInt(this.dataset.index);
+                    var campo = this.dataset.recCampo;
+                    recursos[i][campo] = this.value;
+                    renderizarRecursos();
+                });
+            });
+
+            /* Eliminar recurso */
+            grid.querySelectorAll('[data-accion="eliminar-recurso"]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var i = parseInt(this.dataset.index);
+                    if (confirm('Eliminar recurso "' + (recursos[i].titulo || '') + '"?')) {
+                        recursos.splice(i, 1);
+                        renderizarRecursos();
+                    }
+                });
+            });
+
+            /* Probar recurso (abrir URL) */
+            grid.querySelectorAll('[data-accion="probar-recurso"]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var i = parseInt(this.dataset.index);
+                    var url = recursos[i].url;
+                    if (url) window.open(url, '_blank');
+                });
+            });
+
+            document.getElementById('btn-engadir-recurso').onclick = function () {
+                recursos.push({ titulo: 'Novo recurso', url: 'https://', icona: 'external-link' });
+                renderizarRecursos();
+            };
         }
 
         function renderizarGaleria() {
@@ -1937,22 +2044,6 @@
                                 + '<div class="club-editor-fila"><div class="club-editor-grupo"><label>Lectura (título)</label><input type="text" value="' + (sec.club_lectura_titulo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_lectura_titulo" data-index="' + idx + '" data-tipo="seccion" placeholder="Título do libro" /></div>'
                                 + '<div class="club-editor-grupo"><label>Lectura (autor)</label><input type="text" value="' + (sec.club_lectura_autor || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_lectura_autor" data-index="' + idx + '" data-tipo="seccion" placeholder="Autor/a" /></div></div>'
                                 + '<div class="club-editor-grupo"><label>Texto do botón</label><input type="text" value="' + (sec.club_boton_texto || 'Incribirme').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_boton_texto" data-index="' + idx + '" data-tipo="seccion" /></div>'
-                                + '<div class="editable-field ancho-completo"><label>Recursos</label>'
-                                + '<div class="subapartados-container">'
-                                + '<input type="hidden" value="' + subapartadosValor.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + '" data-campo="filtro_categoria2" data-index="' + idx + '" data-tipo="seccion">'
-                                + '<div class="favoritos-chips">' + chipsHtml + '</div>'
-                                + '<button type="button" class="btn-icon btn-rec-add" data-index="' + idx + '" style="margin-top:4px;font-size:12px;"><i class="fas fa-plus-circle"></i> Engadir recurso</button>'
-                                + '<div class="subapartados-add" style="display:none;">'
-                                + '<input type="text" class="rec-titulo-input" placeholder="Título" style="flex:1;min-width:100px;">'
-                                + '<input type="text" class="rec-url-input" placeholder="URL" style="flex:2;min-width:140px;">'
-                                + '<select class="rec-icona-select">'
-                                + '<option value="book">Libro</option><option value="globe">Web</option><option value="external-link">Ligazón</option>'
-                                + '<option value="file-text">Documento</option><option value="video">Vídeo</option><option value="headphones">Audio</option>'
-                                + '</select>'
-                                + '<button type="button" class="btn-icon rec-add-btn" data-index="' + idx + '"><i class="fas fa-check"></i></button>'
-                                + '<button type="button" class="btn-icon rec-cancel-btn" style="color:var(--cor-texto-mutado);"><i class="fas fa-times"></i></button>'
-                                + '</div></div></div>'
-                                + '<div style="font-size:11px;color:var(--cor-texto-mutado);margin-top:2px;">Cada recurso: título, URL e icona.</div>'
                         + '</div>';
                         }() : '')
                         + (eEfemeride ? function () {
@@ -2231,55 +2322,6 @@
                         if (form) { form.style.display = 'none'; form.querySelectorAll('input').forEach(function (i) { i.value = ''; }); }
                     });
                 });
-                grid.querySelectorAll('.rec-add-btn').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var container = this.closest('.subapartados-container');
-                        var tituloInput = container.querySelector('.rec-titulo-input');
-                        var urlInput = container.querySelector('.rec-url-input');
-                        var iconaSelect = container.querySelector('.rec-icona-select');
-                        var idx = parseInt(this.dataset.index);
-                        var titulo = tituloInput.value.trim();
-                        if (!titulo) { mostrarAviso('Escribe o título', 'erro'); return; }
-                        var url = urlInput.value.trim();
-                        var icona = iconaSelect.value;
-                        var rec = { titulo: titulo, url: url, icona: icona };
-                        var arr = seccions;
-                        var actual = [];
-                        try { actual = JSON.parse(arr[idx].filtro_categoria2 || '[]'); } catch (e) { actual = []; }
-                        if (!Array.isArray(actual)) actual = [];
-                        actual.push(rec);
-                        arr[idx].filtro_categoria2 = JSON.stringify(actual);
-                        renderizarSeccions();
-                    });
-                });
-                grid.querySelectorAll('.rec-remove').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var idx = parseInt(this.dataset.index);
-                        var recIdx = parseInt(this.dataset.recIndex);
-                        var arr = seccions;
-                        var actual = [];
-                        try { actual = JSON.parse(arr[idx].filtro_categoria2 || '[]'); } catch (e) { actual = []; }
-                        if (!Array.isArray(actual)) actual = [];
-                        actual.splice(recIdx, 1);
-                        arr[idx].filtro_categoria2 = JSON.stringify(actual);
-                        renderizarSeccions();
-                    });
-                });
-                grid.querySelectorAll('.btn-rec-add').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var container = this.closest('.subapartados-container');
-                        var form = container.querySelector('.subapartados-add');
-                        if (form) form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-                    });
-                });
-                grid.querySelectorAll('.rec-cancel-btn').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var container = this.closest('.subapartados-container');
-                        var form = container.querySelector('.subapartados-add');
-                        if (form) { form.style.display = 'none'; form.querySelectorAll('input').forEach(function (i) { i.value = ''; }); }
-                    });
-                });
-            }
 
             /* ---- Colapsables ---- */
             grid.querySelectorAll('.btn-colapsable').forEach(function (btn) {
@@ -2293,6 +2335,7 @@
                     }
                 });
             });
+        }
         }
 
         /* -------------------------------------------------------
@@ -2352,6 +2395,7 @@
             gardarConfigDesdeForm();
 
             var configRow = Object.assign({}, configuracion);
+            configRow.recursos = JSON.stringify(recursos);
             var configCSV = objectToCSV(cabeceirasConfig.length ? cabeceirasConfig : Object.keys(configRow), [configRow]);
 
             var cabeceirasCont = cabeceirasContido.length ? cabeceirasContido : [
@@ -2611,3 +2655,25 @@
                         evento_categoria: '', evento_imaxe: '', evento_destacado: ''
                     };
                 }
+                if (item.tipo === 'evento') {
+                    return {
+                        tipo: 'evento', titulo: '', descricion: item.descricion || '', categoria: '', imaxe: '',
+                        data: '', hora: '', autor: '', nivel: '', link: '', favorito_de: '',
+                        destacado: '', hero_destacado: item.hero_destacado || 'NON',
+                        orde: item.orde || '', activo: item.activo || 'SI', idioma: '',
+                        etiqueta: '', disponible: '', cita: '',
+                        evento_titulo: item.titulo || '', evento_autora: item.autor || '',
+                        evento_data: item.data || '', evento_hora: item.hora || '',
+                        evento_categoria: item.categoria || '', evento_imaxe: item.imaxe || '',
+                        evento_destacado: item.destacado || 'NON'
+                    };
+                }
+                return item;
+            });
+        }
+
+        cargarDatosIniciais();
+    </script>
+</body>
+
+</html>
