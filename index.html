@@ -4059,7 +4059,8 @@
                 hero_libro_titulo: cfg.hero_libro_titulo || 'As Malas Mulleres',
                 hero_libro_autor: cfg.hero_libro_autor || 'Marilar Aleixandre',
                 hero_libro_cita: cfg.hero_libro_cita || 'A literatura ten forza.',
-                hero_libro_portada: cfg.hero_libro_portada || 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80'
+                hero_libro_portada: cfg.hero_libro_portada || 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80',
+                recursos: (function () { try { return JSON.parse(cfg.recursos || '[]'); } catch (e) { return []; } })()
             };
 
             const contData = (parseCSV(await rCont.text())).datos;
@@ -4844,11 +4845,7 @@
            Inclúe datos do centro + formulario de suxestións.
            ------------------------------------------------------- */
         function xerarContacto(secc) {
-            var recursos = [
-                { titulo: 'Koha - Catálogo', url: 'https://koha.edu.xunta.gal', icona: 'book' },
-                { titulo: 'Elbe2', url: 'https://www.elbe2.es', icona: 'external-link' },
-                { titulo: 'PLEA', url: 'https://drive.google.com', icona: 'file-text' }
-            ];
+            var recursos = configuracion.recursos || [];
             var recursosHTML = recursos.map(function (r) {
                 var svgIcon = '';
                 if (r.icona === 'book') svgIcon = '<svg class="recurso-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
