@@ -1473,6 +1473,7 @@
                     club_lectura_titulo: row.club_lectura_titulo || '',
                     club_lectura_autor: row.club_lectura_autor || '',
                     club_boton_texto: row.club_boton_texto || '',
+                    club_lectura_portada: row.club_lectura_portada || '',
                     efemeride_variante: row.efemeride_variante || '',
                     efemeride_descricion: row.efemeride_descricion || '',
                     efemeride_data: row.efemeride_data || '',
@@ -2044,6 +2045,7 @@
                                 + '<div class="club-editor-fila"><div class="club-editor-grupo"><label>Lectura (título)</label><input type="text" value="' + (sec.club_lectura_titulo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_lectura_titulo" data-index="' + idx + '" data-tipo="seccion" placeholder="Título do libro" /></div>'
                                 + '<div class="club-editor-grupo"><label>Lectura (autor)</label><input type="text" value="' + (sec.club_lectura_autor || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_lectura_autor" data-index="' + idx + '" data-tipo="seccion" placeholder="Autor/a" /></div></div>'
                                 + '<div class="club-editor-grupo"><label>Texto do botón</label><input type="text" value="' + (sec.club_boton_texto || 'Incribirme').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_boton_texto" data-index="' + idx + '" data-tipo="seccion" /></div>'
+                                + '<div class="club-editor-grupo"><label>Imaxe de fondo (portada)</label><input type="text" value="' + (sec.club_lectura_portada || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="club_lectura_portada" data-index="' + idx + '" data-tipo="seccion" placeholder="URL da imaxe de fondo" /></div>'
                         + '</div>';
                         }() : '')
                         + (eEfemeride ? function () {
@@ -2408,8 +2410,9 @@
 
             var cabeceirasSec = cabeceirasSeccions.length ? cabeceirasSeccions : [
                 'tipo_seccion', 'titulo', 'filtro_categoria', 'filtro_categoria2', 'idioma', 'etiqueta', 'orde', 'activo',
-                'club_descricion', 'club_data', 'club_lectura_titulo', 'club_lectura_autor', 'club_boton_texto',
-                'efemeride_variante', 'efemeride_data', 'efemeride_etiqueta', 'efemeride_descricion', 'efemeride_texto_destacado', 'efemeride_texto_secundario', 'efemeride_imaxe', 'efemeride_logo'
+                'club_descricion', 'club_data', 'club_lectura_titulo', 'club_lectura_autor', 'club_boton_texto', 'club_lectura_portada',
+                'efemeride_variante', 'efemeride_data', 'efemeride_etiqueta', 'efemeride_descricion', 'efemeride_texto_destacado', 'efemeride_texto_secundario', 'efemeride_imaxe', 'efemeride_logo',
+                'efemeride_programa', 'efemeride_programa_titulo'
             ];
             var seccionsCSV = objectToCSV(cabeceirasSec, seccions);
 
