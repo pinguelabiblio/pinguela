@@ -3846,8 +3846,8 @@
     Orde de carga: Sheets API → Worker → CSVs locais → Exemplos fixos
     ================================================================ -->
     <script>
-        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
-        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
+        // window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        // window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
 
     <!-- ============================================================
@@ -3875,13 +3875,14 @@
 
         function converterURLDrive(url) {
             if (!url) return url;
+            var id = null;
             var m = url.match(/drive\.google\.com\/file\/d\/([^\/?#&]+)/);
-            if (m) return 'https://drive.google.com/uc?export=view&id=' + m[1];
-            /* https://drive.usercontent.google.com/download?id=... */
-            if (/drive\.google|googleusercontent/.test(url)) {
-                var id = url.match(/[?&]id=([^&#]+)/);
-                if (id) return 'https://drive.google.com/uc?export=view&id=' + id[1];
+            if (m) id = m[1];
+            if (!id && /drive\.google|googleusercontent/.test(url)) {
+                var m2 = url.match(/[?&]id=([^&#]+)/);
+                if (m2) id = m2[1];
             }
+            if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w800';
             return url;
         }
 
