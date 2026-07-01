@@ -4792,7 +4792,11 @@
                 if (!grupos[dir]) grupos[dir] = [];
                 grupos[dir].push(img);
             });
-            var dirs = Object.keys(grupos);
+            var dirs = Object.keys(grupos).sort(function (a, b) {
+                var idxA = imaxes.reduce(function (acc, img, i) { return img.directorio === a ? i : acc; }, -1);
+                var idxB = imaxes.reduce(function (acc, img, i) { return img.directorio === b ? i : acc; }, -1);
+                return idxB - idxA;
+            });
             for (var i = amosados; i < total; i++) {
                 var d = dirs[i];
                 var imgs = grupos[d];
