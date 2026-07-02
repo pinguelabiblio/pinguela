@@ -2649,7 +2649,6 @@
             input.type = 'file';
             input.accept = '.xlsx';
             input.onchange = function (e) {
-            if (!confirm('Cargar CSVs manualmente?\n\n1. Selecciona configuracion.csv\n2. Selecciona contido.csv\n3. Selecciona seccions.csv\n4. (Opcional) Selecciona galeria.csv\n\nSó se recomenda para restaurar copias de seguridade.')) return;
                 var file = e.target.files[0];
                 if (!file) return;
                 var reader = new FileReader();
@@ -2667,6 +2666,20 @@
                             if (!Array.isArray(recursos)) recursos = [];
                         }
                         contido = XLSX.utils.sheet_to_json(wb.Sheets['contido']);
+                        contido.forEach(function (item) {
+                            if (item.tipo === 'evento' && item.evento_titulo) {
+                                item.titulo = item.evento_titulo;
+                                item.autor = item.evento_autora || '';
+                                item.data = item.evento_data || '';
+                                item.hora = item.evento_hora || '';
+                                item.categoria = item.evento_categoria || '';
+                                item.imaxe = item.evento_imaxe || '';
+                                if (item.evento_destacado) item.destacado = item.evento_destacado;
+                                delete item.evento_titulo; delete item.evento_autora; delete item.evento_data;
+                                delete item.evento_hora; delete item.evento_categoria; delete item.evento_imaxe;
+                                delete item.evento_destacado;
+                            }
+                        });
                         seccions = XLSX.utils.sheet_to_json(wb.Sheets['seccions']);
                         galeriaDatos = XLSX.utils.sheet_to_json(wb.Sheets['galeria']);
                         cabeceirasConfig = cfg.length ? Object.keys(cfg[0]) : [];
