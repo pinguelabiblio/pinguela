@@ -608,6 +608,19 @@
         /* ========================================================
            CONFIGURACIÓN / DESTACADOS / DRAGGABLE / AVISOS
            ======================================================== */
+        .config-seccion-titulo {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--cor-texto);
+            margin: 28px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: var(--bordo-fino);
+        }
+
+        .config-seccion-titulo:first-of-type {
+            margin-top: 0;
+        }
+
         .config-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -1064,6 +1077,8 @@
              PANEL: CONFIGURACIÓN (hero, ticker, contador)
              ======================================================== -->
         <div class="panel-tab visible" id="tab-config">
+
+            <div class="config-seccion-titulo"><i class="fas fa-desktop"></i> Pantalla principal (hero)</div>
             <div class="config-grid">
                 <div class="card-item"><label title="Como se mostra o hero na páxina principal">Hero estilo</label><select id="hero_estilo">
                         <option value="A">A (imaxe+texto)</option>
@@ -1111,9 +1126,24 @@
                         </select>
                     </div>
                 </div>
+            </div>
+
+            <div class="config-seccion-titulo"><i class="fas fa-envelope"></i> Suxestións do Club de Lectura</div>
+            <div class="config-grid">
                 <div class="card-item"><label title="Email para recibir suxestións do Club de Lectura">Email suxestións</label><input type="email" id="email_suxestions" placeholder="biblioteca@iesapinguela.es" /></div>
             </div>
-            <p style="margin-top:16px;color:var(--cor-texto-mutado);font-size:13px;"><i class="fas fa-info-circle"></i> <strong>configuracion.csv</strong> — o email de suxestións úsase no formulario do Club de Lectura.</p>
+            <p style="margin:4px 0 0 0;color:var(--cor-texto-mutado);font-size:12px;"><i class="fas fa-info-circle"></i> Este email aparece no formulario de suxestións da sección Club de Lectura.</p>
+
+            <div class="config-seccion-titulo"><i class="fas fa-copyright"></i> Pé da páxina (footer)</div>
+            <div class="config-grid">
+                <div class="card-item"><label title="Texto principal do footer">Título</label><input type="text" id="footer_titulo" placeholder="Biblioteca do IES A Pinguela" /></div>
+                <div class="card-item"><label title="Subtítulo do footer">Subtítulo</label><input type="text" id="footer_subtitulo" placeholder="Plan de Mellora de Bibliotecas Escolares (PLAMBE)" /></div>
+                <div class="card-item"><label title="Teléfono que se mostra no footer">Teléfono</label><input type="text" id="footer_telefono" placeholder="982 82 80 51" /></div>
+                <div class="card-item"><label title="Email que se mostra no footer">Email</label><input type="email" id="footer_email" placeholder="ies.pinguela@edu.xunta.gal" /></div>
+                <div class="card-item"><label title="Texto de copyright do footer">Copyright</label><input type="text" id="footer_copy" placeholder="© 2026 · IES A Pinguela · Monforte de Lemos" /></div>
+            </div>
+            <p style="margin:4px 0 0 0;color:var(--cor-texto-mutado);font-size:12px;"><i class="fas fa-info-circle"></i> Estes datos móstransse no pé de todas as páxinas.</p>
+
         </div>
 
         <!-- ========================================================
@@ -1422,11 +1452,16 @@
                 hero_libro_autor: row.hero_libro_autor || '',
                 hero_libro_cita: row.hero_libro_cita || '',
                 hero_libro_portada: row.hero_libro_portada || '',
-                email_suxestions: row.email_suxestions || ''
+                email_suxestions: row.email_suxestions || '',
+                footer_titulo: row.footer_titulo || 'Biblioteca do IES A Pinguela',
+                footer_subtitulo: row.footer_subtitulo || 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)',
+                footer_telefono: row.footer_telefono || '982 82 80 51',
+                footer_email: row.footer_email || 'ies.pinguela@edu.xunta.gal',
+                footer_copy: row.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos'
             };
             try { recursos = JSON.parse(row.recursos || '[]'); } catch (e) { recursos = []; }
             if (!Array.isArray(recursos)) recursos = [];
-            ['hero_boton2_texto', 'hero_boton2_link', 'email_suxestions'].forEach(function (k) {
+            ['hero_boton2_texto', 'hero_boton2_link', 'email_suxestions', 'footer_titulo', 'footer_subtitulo', 'footer_telefono', 'footer_email', 'footer_copy'].forEach(function (k) {
                 if (cabeceirasConfig.indexOf(k) === -1) cabeceirasConfig.push(k);
             });
             cargarConfigEnForm();
@@ -1512,6 +1547,11 @@
                 efemeride_programa_titulo: row.efemeride_programa_titulo || ''
                 };
             });
+            seccions.forEach(function (s) {
+                if (['bibliobenestar', 'memoria', 'planetario'].indexOf(s.tipo_seccion) > -1) {
+                    s.tipo_seccion = 'subapartados';
+                }
+            });
             renderizarSeccions();
         }
 
@@ -1544,6 +1584,11 @@
             document.getElementById('hero_libro-portada').value = c.hero_libro_portada || '';
             document.getElementById('ticker-input').value = c.ticker || '';
             document.getElementById('email_suxestions').value = c.email_suxestions || '';
+            document.getElementById('footer_titulo').value = c.footer_titulo || '';
+            document.getElementById('footer_subtitulo').value = c.footer_subtitulo || '';
+            document.getElementById('footer_telefono').value = c.footer_telefono || '';
+            document.getElementById('footer_email').value = c.footer_email || '';
+            document.getElementById('footer_copy').value = c.footer_copy || '';
             var tickerCheck = document.getElementById('ticker_activo_check');
             if (tickerCheck) {
                 tickerCheck.checked = (c.ticker_activo && c.ticker_activo.toUpperCase() === 'SI');
@@ -1565,6 +1610,11 @@
             configuracion.hero_libro_portada = converterURLDrive(document.getElementById('hero_libro-portada').value);
             configuracion.ticker = document.getElementById('ticker-input').value;
             configuracion.email_suxestions = document.getElementById('email_suxestions').value;
+            configuracion.footer_titulo = document.getElementById('footer_titulo').value;
+            configuracion.footer_subtitulo = document.getElementById('footer_subtitulo').value;
+            configuracion.footer_telefono = document.getElementById('footer_telefono').value;
+            configuracion.footer_email = document.getElementById('footer_email').value;
+            configuracion.footer_copy = document.getElementById('footer_copy').value;
             var tickerCheck = document.getElementById('ticker_activo_check');
             configuracion.ticker_activo = tickerCheck ? (tickerCheck.checked ? 'SI' : 'NON') : 'SI';
         }
@@ -2107,9 +2157,9 @@
                         return '<select data-campo="' + nomeCampo + '" data-index="' + idx + '" data-tipo="seccion">' + opcions + '</select>';
                     }
 
-                    var eImborrable = ['eventos', 'contacto', 'bibliobenestar', 'memoria', 'planetario', 'normas', 'club', 'galeria', 'preferidos'].indexOf(sec.tipo_seccion) > -1
+                    var eImborrable = ['eventos', 'contacto', 'normas', 'club', 'galeria', 'preferidos'].indexOf(sec.tipo_seccion) > -1
                         && seccions.findIndex(function (s) { return s.tipo_seccion === sec.tipo_seccion; }) === idx;
-                    var eSubapartados = sec.tipo_seccion === 'bibliobenestar' || sec.tipo_seccion === 'memoria' || sec.tipo_seccion === 'planetario' || sec.tipo_seccion === 'subapartados';
+                    var eSubapartados = sec.tipo_seccion === 'subapartados';
                     var eCarrusel = sec.tipo_seccion === 'carrusel';
                     var eClub = sec.tipo_seccion === 'club';
                     var eEfemeride = sec.tipo_seccion === 'efemeride';
@@ -2124,9 +2174,6 @@
                         + '<div class="editable-field"><label>Tipo</label><select data-campo="tipo_seccion" data-index="' + idx + '" data-tipo="seccion">'
                         + '<option value="carrusel"' + (sec.tipo_seccion === 'carrusel' ? ' selected' : '') + '>Carrusel</option>'
                         + '<option value="club"' + (sec.tipo_seccion === 'club' ? ' selected' : '') + '>Club de lectura</option>'
-                        + '<option value="bibliobenestar"' + (sec.tipo_seccion === 'bibliobenestar' ? ' selected' : '') + '>BiblioBenestar</option>'
-                        + '<option value="memoria"' + (sec.tipo_seccion === 'memoria' ? ' selected' : '') + '>Memoria</option>'
-                        + '<option value="planetario"' + (sec.tipo_seccion === 'planetario' ? ' selected' : '') + '>Planetario</option>'
                         + '<option value="subapartados"' + (sec.tipo_seccion === 'subapartados' ? ' selected' : '') + '>Subapartados</option>'
                         + '<option value="efemeride"' + (sec.tipo_seccion === 'efemeride' ? ' selected' : '') + '>Efeméride</option>'
                         + '</select></div>'
@@ -2683,6 +2730,7 @@
                             }
                         });
                         seccions = XLSX.utils.sheet_to_json(wb.Sheets['seccions']).map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k] == null ? '' : String(r[k]); }); return o; });
+                        seccions.forEach(function (s) { if (['bibliobenestar', 'memoria', 'planetario'].indexOf(s.tipo_seccion) > -1) s.tipo_seccion = 'subapartados'; });
                         galeriaDatos = XLSX.utils.sheet_to_json(wb.Sheets['galeria']).map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k] == null ? '' : String(r[k]); }); return o; });
                         cabeceirasConfig = cfg.length ? Object.keys(cfg[0]) : [];
                         cabeceirasContido = contido.length ? Object.keys(contido[0]) : [];
@@ -2766,8 +2814,8 @@
            Úsase cando non se poden cargar os CSVs do servidor.
            ------------------------------------------------------- */
         function cargarExemplos() {
-            var configCSV = 'ticker_activo,ticker,hero_tipo,hero_titulo,hero_subtitulo,hero_imaxe,hero_boton_texto,hero_boton_link,hero_boton2_texto,hero_boton2_link,hero_libro_titulo,hero_libro_autor,hero_libro_cita,hero_libro_portada\n'
-                + 'SI,"📚 Benvidos á biblioteca · Novidades · Encontros · Obradoiros",B,"Un universo de historias","A biblioteca é un espazo vivo.",https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80,"Explorar",#seccion-eventos,"Recomendacións",#seccion-carrusel,"As Malas Mulleres","Marilar Aleixandre","«A literatura ten forza.»",https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80';
+            var configCSV = 'ticker_activo,ticker,hero_tipo,hero_titulo,hero_subtitulo,hero_imaxe,hero_boton_texto,hero_boton_link,hero_boton2_texto,hero_boton2_link,hero_libro_titulo,hero_libro_autor,hero_libro_cita,hero_libro_portada,footer_titulo,footer_subtitulo,footer_telefono,footer_email,footer_copy\n'
+                + 'SI,"📚 Benvidos á biblioteca · Novidades · Encontros · Obradoiros",B,"Un universo de historias","A biblioteca é un espazo vivo.",https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80,"Explorar",#seccion-eventos,"Recomendacións",#seccion-carrusel,"As Malas Mulleres","Marilar Aleixandre","«A literatura ten forza.»",https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80,"Biblioteca do IES A Pinguela","Plan de Mellora de Bibliotecas Escolares (PLAMBE)","982 82 80 51","ies.pinguela@edu.xunta.gal","© 2026 · IES A Pinguela · Monforte de Lemos"';
 
             var contidoCSV = 'tipo,titulo,descricion,categoria,imaxe,data,hora,autor,nivel,link,favorito_de,destacado,hero_destacado,orde,activo,etiqueta,disponible,cita\n'
                 + 'libro,O clan da loba,"Mitoloxía galega e adolescentes.",Novela xuvenil,https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80,,,María Reimóndez,14+,#,,SI,,,Novidade,SI,\n'
