@@ -4969,8 +4969,8 @@
     Orde de carga: Sheets API → Worker → CSVs locais → Exemplos fixos
     ================================================================ -->
     <script>
-        // window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
-        // window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
+        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
 
     <!-- ============================================================
@@ -6185,7 +6185,7 @@
                 lista = lista.slice(0, 8);
                 if (!lista.length) return;
                 var idCarrusel = id + '-' + chaves[0];
-                html += '<div class="carrusel-filtrado" data-filtro="' + chave + '">'
+                html += '<div class="carrusel-filtrado" data-filtro="' + chaves[0] + '">'
                     + '<div class="carrusel-cinta"><div class="carrusel-cinta-header">'
                     + '<h3>' + b.titulo + ' <span class="badge-cinta">' + lista.length + '</span></h3>'
                     + '<div class="carrusel-flechas">'
