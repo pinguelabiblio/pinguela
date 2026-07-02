@@ -796,6 +796,23 @@
             white-space: nowrap;
         }
 
+        /* ---- Spoiler conxunto (batch upload) ---- */
+        .spoiler-conxunto { display: none; margin-top:8px; padding:10px; background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; gap:10px; }
+        .spoiler-conxunto.aberto { display:flex; }
+        .spoiler-conxunto-info { width:340px; min-width:240px; font-size:0.82rem; }
+        .spoiler-conxunto-info h4 { margin:0 0 8px 0; font-size:0.85rem; color:#495057; }
+        .spoiler-conxunto-info .formato-exemplo { margin-bottom:5px; padding:4px 6px; background:#fff; border-radius:3px; border:1px solid #e9ecef; }
+        .spoiler-conxunto-info .formato-exemplo code { display:block; font-size:0.72rem; color:#333; word-break:break-all; }
+        .spoiler-conxunto-info .etiqueta-formato { display:inline-block; margin-top:2px; font-size:0.68rem; color:#6c757d; background:#e9ecef; padding:1px 4px; border-radius:2px; }
+        .spoiler-conxunto-info .nota-importante { margin-top:6px; padding:4px 6px; background:#fff3e0; border-radius:3px; color:#e65100; font-size:0.75rem; }
+        .spoiler-conxunto-input { flex:1; display:flex; flex-direction:column; }
+        .spoiler-conxunto-input textarea { width:100%; min-height:80px; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:0.85rem; font-family:monospace; resize:vertical; box-sizing:border-box; }
+        .resultado-conxunto { padding:5px 8px; border-radius:4px; font-size:0.78rem; display:none; margin:4px 0; }
+        .resultado-conxunto.ok { display:block; background:#e8f5e9; color:#2e7d32; }
+        .resultado-conxunto.aviso { display:block; background:#fff3e0; color:#e65100; }
+        .resultado-conxunto.erro { display:block; background:#ffebee; color:#c62828; }
+        .spoiler-conxunto-botoes { display:flex; gap:6px; justify-content:flex-end; }
+
         /* ---- Nivel badge na cabeceira ---- */
         .nivel-input-mini {
             display: inline-block;
@@ -992,6 +1009,7 @@
             box-sizing: border-box;
         }
     </style>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 
 <body data-theme="light">
@@ -1005,8 +1023,8 @@
             <h1><i class="fas fa-sliders-h" style="color:var(--secundaria);"></i> Panel de Control</h1>
             <div class="accions">
                 <button class="btn primario" id="btn-gardar-todo"><i class="fas fa-save"></i> Gardar todo</button>
-                <button class="btn secundario" id="btn-cargar-datos"><i class="fas fa-upload"></i> Cargar CSVs</button>
-                <button class="btn secundario" id="btn-vista-previa"><i class="fas fa-eye"></i> Vista previa</button>
+                <button class="btn secundario" id="btn-descargar-copia"><i class="fas fa-download"></i> Descargar copia</button>
+                <button class="btn secundario" id="btn-cargar-copia"><i class="fas fa-upload"></i> Cargar copia</button>
                 <a href="index.html" class="btn secundario" target="_blank"><i class="fas fa-external-link-alt"></i> Ver web</a>
             </div>
         </header>
@@ -1093,8 +1111,9 @@
                         </select>
                     </div>
                 </div>
+                <div class="card-item"><label title="Email para recibir suxestións do Club de Lectura">Email suxestións</label><input type="email" id="email_suxestions" placeholder="biblioteca@iesapinguela.es" /></div>
             </div>
-            <p style="margin-top:16px;color:var(--cor-texto-mutado);font-size:13px;"><i class="fas fa-info-circle"></i> Estes valores gardaranse en <strong>configuracion.csv</strong>.</p>
+            <p style="margin-top:16px;color:var(--cor-texto-mutado);font-size:13px;"><i class="fas fa-info-circle"></i> <strong>configuracion.csv</strong> — o email de suxestións úsase no formulario do Club de Lectura.</p>
         </div>
 
         <!-- ========================================================
@@ -1140,7 +1159,7 @@
         <div class="panel-tab" id="tab-galeria">
             <div class="flex-between">
                 <span class="info"><i class="fas fa-images"></i> <strong>Galería de imaxes</strong> <span id="contador-galeria"></span></span>
-                <button class="btn primario" id="btn-engadir-album"><i class="fas fa-plus"></i> Novo álbum</button> <button class="btn" id="btn-engadir-foto-galeria"><i class="fas fa-image"></i> Engadir foto</button>
+                <button class="btn primario" id="btn-engadir-album"><i class="fas fa-plus"></i> Novo álbum</button>
             </div>
             <div class="grid-cards" id="grid-galeria"></div>
         </div>
@@ -1342,8 +1361,14 @@
         /* Converte URL de Google Drive ao formato export (directo para <img>) */
         function converterURLDrive(url) {
             if (!url) return url;
-            var match = url.match(/drive\.google\.com\/file\/d\/([^\/?#&]+)/);
-            if (match) return 'https://drive.google.com/uc?export=view&id=' + match[1];
+            var id = null;
+            var m = url.match(/drive\.google\.com\/file\/d\/([^\/?#&]+)/);
+            if (m) id = m[1];
+            if (!id && /drive\.google|googleusercontent/.test(url)) {
+                var m2 = url.match(/[?&]id=([^&#]+)/);
+                if (m2) id = m2[1];
+            }
+            if (id) return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w800';
             return url;
         }
 
@@ -1396,11 +1421,12 @@
                 hero_libro_titulo: row.hero_libro_titulo || '',
                 hero_libro_autor: row.hero_libro_autor || '',
                 hero_libro_cita: row.hero_libro_cita || '',
-                hero_libro_portada: row.hero_libro_portada || ''
+                hero_libro_portada: row.hero_libro_portada || '',
+                email_suxestions: row.email_suxestions || ''
             };
             try { recursos = JSON.parse(row.recursos || '[]'); } catch (e) { recursos = []; }
             if (!Array.isArray(recursos)) recursos = [];
-            ['hero_boton2_texto', 'hero_boton2_link'].forEach(function (k) {
+            ['hero_boton2_texto', 'hero_boton2_link', 'email_suxestions'].forEach(function (k) {
                 if (cabeceirasConfig.indexOf(k) === -1) cabeceirasConfig.push(k);
             });
             cargarConfigEnForm();
@@ -1517,6 +1543,7 @@
             document.getElementById('hero_libro-cita').value = c.hero_libro_cita || '';
             document.getElementById('hero_libro-portada').value = c.hero_libro_portada || '';
             document.getElementById('ticker-input').value = c.ticker || '';
+            document.getElementById('email_suxestions').value = c.email_suxestions || '';
             var tickerCheck = document.getElementById('ticker_activo_check');
             if (tickerCheck) {
                 tickerCheck.checked = (c.ticker_activo && c.ticker_activo.toUpperCase() === 'SI');
@@ -1537,6 +1564,7 @@
             configuracion.hero_libro_cita = document.getElementById('hero_libro-cita').value;
             configuracion.hero_libro_portada = converterURLDrive(document.getElementById('hero_libro-portada').value);
             configuracion.ticker = document.getElementById('ticker-input').value;
+            configuracion.email_suxestions = document.getElementById('email_suxestions').value;
             var tickerCheck = document.getElementById('ticker_activo_check');
             configuracion.ticker_activo = tickerCheck ? (tickerCheck.checked ? 'SI' : 'NON') : 'SI';
         }
@@ -1687,8 +1715,9 @@
             Object.keys(directorios).sort().forEach(function (dir) {
                 var imgs = directorios[dir];
                 var portada = imgs.length ? imgs[0].item : null;
-                var portadaImg = (portada && portada.url)
-                    ? '<img src="' + portada.url + '" alt="' + dir + '" class="preview-img">'
+                var portadaUrl = portada ? converterURLDrive(portada.url) : '';
+                var portadaImg = (portada && portadaUrl)
+                    ? '<img src="' + portadaUrl + '" alt="' + dir + '" class="preview-img">'
                     : '<div class="preview-img" style="background:var(--bg-principal);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--cor-texto-mutado);"><i class="fas fa-image"></i></div>';
 
                 html += '<div class="card-item grupo-directorio">'
@@ -1699,8 +1728,9 @@
                 imgs.forEach(function (obj) {
                     var item = obj.item;
                     var idx = obj.idx;
-                    var imgHtml = item.url
-                        ? '<img src="' + item.url + '" alt="' + item.titulo + '" class="preview-img">'
+                    var imgUrl = item.url ? converterURLDrive(item.url) : '';
+                    var imgHtml = imgUrl
+                        ? '<img src="' + imgUrl + '" alt="' + item.titulo + '" class="preview-img">'
                         : '<div class="preview-img" style="background:var(--bg-principal);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--cor-texto-mutado);"><i class="fas fa-image"></i></div>';
                     html += '<div class="card-item subfoto" draggable="true" data-index="' + idx + '" data-tipo="galeria">'
                         + '<div class="card-header"><div class="preview-wrap" style="width:100px;">' + imgHtml + '</div></div>'
@@ -1715,9 +1745,28 @@
                     + '<div class="engadir-url-rapido" data-directorio="' + dir + '">'
                     + '<label>Engadir URL a <strong>' + dir + '</strong></label>'
                     + '<div class="fila-input">'
-                    + '<input type="text" class="input-url-rapido" placeholder="https://... url da foto">'
+                    + '<input type="text" class="input-url-rapido" placeholder="https://... enlace da foto">'
                     + '<button class="btn primario engadir-url-btn"><i class="fas fa-plus"></i> Engadir</button>'
-                    + '</div></div>'
+                    + '</div>'
+                    + '<button class="btn btn-spoiler-conxunto" data-directorio="' + dir + '" style="margin-top:6px;"><i class="fas fa-layer-group"></i> Engadir conxunto</button>'
+                    + '<div class="spoiler-conxunto" id="spoiler-conxunto-' + dir.replace(/[^a-zA-Z0-9_-]/g, '_') + '">'
+                    + '<div class="spoiler-conxunto-info">'
+                    + '<h4><i class="fas fa-info-circle"></i> Como pegar as fotos</h4>'
+                    + '<p>Podes copiar os enlaces das fotos de calquera destes xeitos:</p>'
+                    + '<div class="formato-exemplo"><code>enlace1, enlace2, enlace3</code><span class="etiqueta-formato">Só enlaces (con coma)</span></div>'
+                    + '<div class="formato-exemplo"><code>Título, enlace</code><span class="etiqueta-formato">Título + enlace (por liña)</span></div>'
+                    + '<div class="formato-exemplo"><code>Título<br>enlace</code><span class="etiqueta-formato">Título e enlace (liñas alternas)</span></div>'
+                    + '<div class="formato-exemplo"><code>Título + Tab + enlace</code><span class="etiqueta-formato">Dúas col. folla de cálculo</span></div>'
+                    + '<p class="nota-importante"><i class="fas fa-exclamation-triangle"></i> Se hai erros avisaremos antes de cargar.</p>'
+                    + '<button class="btn btn-descargar-exemplos" style="font-size:0.78rem;margin-top:6px;width:100%;"><i class="fas fa-download"></i> Descargar exemplos .txt</button>'
+                    + '</div>'
+                    + '<div class="spoiler-conxunto-input">'
+                    + '<textarea class="textarea-conxunto" rows="12" placeholder="Pega aquí os enlaces das fotos (con ou sen título)"></textarea>'
+                    + '<div class="resultado-conxunto"></div>'
+                    + '<div class="spoiler-conxunto-botoes">'
+                    + '<button class="btn btn-cargar-conxunto" data-directorio="' + dir + '"><i class="fas fa-upload"></i> Cargar</button>'
+                    + '</div></div></div>'
+                    + '</div>'
                     + '</div></div>';
             });
 
@@ -1759,6 +1808,96 @@
                     galeriaDatos.push({ directorio: dir, titulo: 'Nova foto', descricion: '', url: url });
                     input.value = '';
                     renderizarGaleria();
+                });
+            });
+
+            /* spoiler conxunto: toggle */
+            grid.querySelectorAll('.btn-spoiler-conxunto').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var spoiler = this.parentNode.querySelector('.spoiler-conxunto');
+                    if (spoiler) spoiler.classList.toggle('aberto');
+                });
+            });
+
+            /* spoiler conxunto: validación ao escribir */
+            grid.querySelectorAll('.textarea-conxunto').forEach(function (ta) {
+                ta.addEventListener('input', function () {
+                    var texto = this.value.trim();
+                    var resDiv = this.parentNode.querySelector('.resultado-conxunto');
+                    resDiv.className = 'resultado-conxunto';
+                    if (!texto) { resDiv.textContent = ''; return; }
+                    var res = parsearConxunto(texto);
+                    if (res.erros.length) {
+                        resDiv.textContent = '⚠ ' + res.erros.join('; ') + ' — ' + res.items.length + ' foto(s) recuperábel(is).';
+                        resDiv.className = 'resultado-conxunto erro';
+                    } else if (res.avisos.length) {
+                        resDiv.textContent = 'ℹ ' + res.avisos.join(' ') + ' (' + res.items.length + ' foto(s) detectada(s)).';
+                        resDiv.className = 'resultado-conxunto aviso';
+                    } else {
+                        resDiv.textContent = '✓ ' + res.items.length + ' foto(s) listas.';
+                        resDiv.className = 'resultado-conxunto ok';
+                    }
+                });
+            });
+
+            /* spoiler conxunto: descargar exemplos */
+            grid.querySelectorAll('.btn-descargar-exemplos').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var exemplos = '=== FORMATOS PARA ENGADIR VARIAS FOTOS Á VEZ ===\n'
+                        + '\n'
+                        + '1. Só enlaces (separados por coma):\n'
+                        + '\n'
+                        + 'https://exemplo.com/foto1.jpg, https://exemplo.com/foto2.jpg, https://exemplo.com/foto3.jpg\n'
+                        + '\n'
+                        + '2. Título + enlace (un par por liña):\n'
+                        + '\n'
+                        + 'Visita de autores, https://exemplo.com/foto1.jpg\n'
+                        + 'Obradoiro, https://exemplo.com/foto2.jpg\n'
+                        + '\n'
+                        + '3. Título nunha liña e enlace na seguinte:\n'
+                        + '\n'
+                        + 'Visita de autores\n'
+                        + 'https://exemplo.com/foto1.jpg\n'
+                        + 'Obradoiro de poesía\n'
+                        + 'https://exemplo.com/foto2.jpg\n'
+                        + '\n'
+                        + '4. Título + enlace alternando con comas:\n'
+                        + '\n'
+                        + 'Maratón, https://exemplo.com/foto1.jpg, Exposición, https://exemplo.com/foto2.jpg\n'
+                        + '\n'
+                        + '5. Dúas columnas de folla de cálculo (tab):\n'
+                        + '\n'
+                        + 'Maratón lectura\thttps://exemplo.com/foto1.jpg\n'
+                        + 'Exposición arte\thttps://exemplo.com/foto2.jpg\n';
+                    var blob = new Blob([exemplos], { type: 'text/plain;charset=utf-8' });
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'exemplos_conxunto.txt';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                });
+            });
+
+            /* spoiler conxunto: cargar */
+            grid.querySelectorAll('.btn-cargar-conxunto').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var cont = this.closest('.spoiler-conxunto');
+                    var dir = this.dataset.directorio;
+                    var ta = cont.querySelector('.textarea-conxunto');
+                    var texto = ta ? ta.value.trim() : '';
+                    if (!texto) { alert('Pega os enlaces das fotos.'); return; }
+                    var res = parsearConxunto(texto);
+                    if (res.erros.length && !confirm(res.erros.join('\n') + '\n\nSó se engadirán ' + res.items.length + ' foto(s). Continuar?')) return;
+                    if (res.avisos.length && !confirm(res.avisos.join('\n') + '\n(' + res.items.length + ' foto(s))\n\nContinuar?')) return;
+                    if (!res.items.length) { alert('Non se puido procesar ningunha foto.'); return; }
+                    res.items.forEach(function (item) { galeriaDatos.push({ directorio: dir, titulo: item.titulo, descricion: '', url: item.url }); });
+                    cont.classList.remove('aberto');
+                    ta.value = '';
+                    cont.querySelector('.resultado-conxunto').textContent = '';
+                    cont.querySelector('.resultado-conxunto').className = 'resultado-conxunto';
+                    renderizarGaleria();
+                    mostrarAviso(res.items.length + ' foto(s) engadidas ao álbum "' + dir + '".', 'success');
                 });
             });
         }
@@ -2474,69 +2613,93 @@
         });
 
         /* -------------------------------------------------------
-           BOTÓN "Vista previa" — abre a web pública noutra lapela
+           BOTÓN "Descargar copia" — xera .xlsx cos datos actuais
            ------------------------------------------------------- */
-        document.getElementById('btn-vista-previa').addEventListener('click', async function () {
-            if (confirm('Gardar cambios antes de ver a vista previa?')) {
-                await gardarTodo();
+        document.getElementById('btn-descargar-copia').addEventListener('click', function () {
+            if (!window.XLSX) { alert('A biblioteca SheetJS non está dispoñible.'); return; }
+            gardarConfigDesdeForm();
+            var wb = XLSX.utils.book_new();
+            function engadirFolla(wb, nome, cabeceiras, datos, fallbackCabeceiras) {
+                var h = cabeceiras.length ? cabeceiras : (datos.length ? Object.keys(datos[0]) : fallbackCabeceiras);
+                var aoa = [h];
+                datos.forEach(function (item) { aoa.push(h.map(function (c) { var v = item[c]; return v != null ? String(v) : ''; })); });
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), nome);
             }
-            window.open('/index.html', '_blank');
+            var configRow = Object.assign({}, configuracion);
+            configRow.recursos = JSON.stringify(recursos);
+            var configHeaders = cabeceirasConfig.length ? cabeceirasConfig : Object.keys(configRow);
+            var configAoa = [configHeaders];
+            configAoa.push(configHeaders.map(function (h) { var v = configRow[h]; return v != null ? String(v) : ''; }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(configAoa), 'configuracion');
+            engadirFolla(wb, 'contido', cabeceirasContido, normalizarContidoParaCSV(contido), []);
+            engadirFolla(wb, 'seccions', cabeceirasSeccions, seccions, []);
+            engadirFolla(wb, 'galeria', cabeceirasGaleria, galeriaDatos, ['directorio', 'titulo', 'descricion', 'url']);
+            var dataStr = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, 'datos_copia_' + dataStr + '.xlsx');
+            mostrarAviso('Copia descargada: datos_copia_' + dataStr + '.xlsx', 'success');
         });
 
-        document.getElementById('btn-cargar-datos').addEventListener('click', function () {
-            if (!confirm('Cargar CSVs manualmente?\n\n1. Selecciona configuracion.csv\n2. Selecciona contido.csv\n3. Selecciona seccions.csv\n4. (Opcional) Selecciona galeria.csv\n\nSó se recomenda para restaurar copias de seguridade.')) return;
-            var inputConfig = document.createElement('input');
-            inputConfig.type = 'file';
-            inputConfig.accept = '.csv';
-            inputConfig.onchange = function (e) {
+        /* -------------------------------------------------------
+           BOTÓN "Cargar copia" — restaura datos desde .xlsx
+           ------------------------------------------------------- */
+        document.getElementById('btn-cargar-copia').addEventListener('click', function () {
+            if (!window.XLSX) { alert('A biblioteca SheetJS non está dispoñible.'); return; }
+            if (!confirm('AVISO: Esta acción vai SUBSTITUÍR todos os datos actuais.\n\nSó se poden cargar arquivos xerados dende este panel (datos_copia_*.xlsx).\nNon subas manualmente este ficheiro ao Drive — edita sempre dende o panel.\n\nContinuar?')) return;
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.xlsx';
+            input.onchange = function (e) {
                 var file = e.target.files[0];
                 if (!file) return;
                 var reader = new FileReader();
                 reader.onload = function (ev) {
-                    try { cargarConfigCSV(ev.target.result); ocultarErro(); mostrarAviso('configuracion.csv cargado.', 'success'); } catch (err) { mostrarErro('Erro no configuracion.csv: ' + err.message); }
-                    var inputCont = document.createElement('input');
-                    inputCont.type = 'file';
-                    inputCont.accept = '.csv';
-                    inputCont.onchange = function (e2) {
-                        var f2 = e2.target.files[0];
-                        if (!f2) return;
-                        var r2 = new FileReader();
-                        r2.onload = function (ev2) {
-                            try { cargarContidoCSV(ev2.target.result); ocultarErro(); mostrarAviso('contido.csv cargado.', 'success'); } catch (err) { mostrarErro('Erro no contido.csv: ' + err.message); }
-                            var inputSec = document.createElement('input');
-                            inputSec.type = 'file';
-                            inputSec.accept = '.csv';
-                            inputSec.onchange = function (e3) {
-                                var f3 = e3.target.files[0];
-                                if (!f3) return;
-                                var r3 = new FileReader();
-                                r3.onload = function (ev3) {
-                                    try { cargarSeccionsCSV(ev3.target.result); ocultarErro(); mostrarAviso('seccions.csv cargado.', 'success'); } catch (err) { mostrarErro('Erro no seccions.csv: ' + err.message); }
-                                    var inputGal = document.createElement('input');
-                                    inputGal.type = 'file';
-                                    inputGal.accept = '.csv';
-                                    inputGal.onchange = function (e4) {
-                                        var f4 = e4.target.files[0];
-                                        if (!f4) return;
-                                        var r4 = new FileReader();
-                                        r4.onload = function (ev4) {
-                                            try { cargarGaleriaCSV(ev4.target.result); ocultarErro(); mostrarAviso('galeria.csv cargado. Todos os CSVs cargados correctamente.', 'success'); } catch (err) { mostrarErro('Erro no galeria.csv: ' + err.message); }
-                                        };
-                                        r4.readAsText(f4, 'UTF-8');
-                                    };
-                                    inputGal.click();
-                                };
-                                r3.readAsText(f3, 'UTF-8');
-                            };
-                            inputSec.click();
-                        };
-                        r2.readAsText(f2, 'UTF-8');
-                    };
-                    inputCont.click();
+                    try {
+                        var data = new Uint8Array(ev.target.result);
+                        var wb = XLSX.read(data, { type: 'array' });
+                        var esperados = ['configuracion', 'contido', 'seccions', 'galeria'];
+                        var faltan = esperados.filter(function (s) { return wb.SheetNames.indexOf(s) === -1; });
+                        if (faltan.length) { alert('O arquivo non é válido. Faltan as follas: ' + faltan.join(', ')); return; }
+                        var cfg = XLSX.utils.sheet_to_json(wb.Sheets['configuracion']);
+                        cfg = cfg.map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k] == null ? '' : String(r[k]); }); return o; });
+                        if (cfg.length) {
+                            configuracion = cfg[0];
+                            try { recursos = JSON.parse(configuracion.recursos || '[]'); } catch (e) { recursos = []; }
+                            if (!Array.isArray(recursos)) recursos = [];
+                        }
+                        contido = XLSX.utils.sheet_to_json(wb.Sheets['contido']);
+                        contido = contido.map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k] == null ? '' : String(r[k]); }); return o; });
+                        contido.forEach(function (item) {
+                            if (item.tipo === 'evento' && item.evento_titulo) {
+                                item.titulo = item.evento_titulo;
+                                item.autor = item.evento_autora || '';
+                                item.data = item.evento_data || '';
+                                item.hora = item.evento_hora || '';
+                                item.categoria = item.evento_categoria || '';
+                                item.imaxe = item.evento_imaxe || '';
+                                if (item.evento_destacado) item.destacado = item.evento_destacado;
+                                delete item.evento_titulo; delete item.evento_autora; delete item.evento_data;
+                                delete item.evento_hora; delete item.evento_categoria; delete item.evento_imaxe;
+                                delete item.evento_destacado;
+                            }
+                        });
+                        seccions = XLSX.utils.sheet_to_json(wb.Sheets['seccions']).map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k] == null ? '' : String(r[k]); }); return o; });
+                        galeriaDatos = XLSX.utils.sheet_to_json(wb.Sheets['galeria']).map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { o[k] = r[k] == null ? '' : String(r[k]); }); return o; });
+                        cabeceirasConfig = cfg.length ? Object.keys(cfg[0]) : [];
+                        cabeceirasContido = contido.length ? Object.keys(contido[0]) : [];
+                        cabeceirasSeccions = seccions.length ? Object.keys(seccions[0]) : [];
+                        cabeceirasGaleria = galeriaDatos.length ? Object.keys(galeriaDatos[0]) : [];
+                        cargarConfigEnForm();
+                        renderizarLibros();
+                        renderizarEventos();
+                        renderizarSeccions();
+                        renderizarGaleria();
+                        ocultarErro();
+                        mostrarAviso('Copia restaurada: ' + contido.length + ' contido(s), ' + seccions.length + ' sección(s), ' + galeriaDatos.length + ' foto(s).', 'success');
+                    } catch (err) { alert('Erro ao ler o arquivo: ' + err.message); }
                 };
-                reader.readAsText(file, 'UTF-8');
+                reader.readAsArrayBuffer(file);
             };
-            inputConfig.click();
+            input.click();
         });
 
         /* -------------------------------------------------------
@@ -2582,11 +2745,6 @@
                 renderizarGaleria();
             }
         });
-        document.getElementById('btn-engadir-foto-galeria').addEventListener('click', function () {
-            galeriaDatos.push({ directorio: 'Xeral', titulo: 'Nova foto', descricion: '', url: '' });
-            renderizarGaleria();
-        });
-
         /* -------------------------------------------------------
            BOTÓNS DE LIMPAR — destacado de libro e hero de evento
            + botón principal de gardar
@@ -2673,6 +2831,52 @@
                 }
                 return item;
             });
+        }
+
+        /* -------------------------------------------------------
+           parsearConxunto(texto) — detecta o formato, valida e
+           devolve { items, erros, avisos }
+           Úsase no spoiler "Engadir conxunto" da galería.
+           ------------------------------------------------------- */
+        function parsearConxunto(texto) {
+            texto = texto.replace(/\t/g, ',');
+            var elementos = [];
+            var liñas = texto.split('\n').filter(function (l) { return l.trim(); });
+            liñas.forEach(function (liña) {
+                liña = liña.trim();
+                if (liña.indexOf(',') > -1) {
+                    liña.split(',').forEach(function (p) {
+                        p = p.trim();
+                        if (p) elementos.push({ valor: p, tipo: /^https?:\/\//i.test(p) ? 'url' : 'titulo' });
+                    });
+                } else {
+                    elementos.push({ valor: liña, tipo: /^https?:\/\//i.test(liña) ? 'url' : 'titulo' });
+                }
+            });
+            var urls = elementos.filter(function (e) { return e.tipo === 'url'; });
+            var titulos = elementos.filter(function (e) { return e.tipo === 'titulo'; });
+            var erros = [], avisos = [], items = [];
+            if (!urls.length) {
+                erros.push('Non se atopou ningún enlace. Os enlaces deben comezar con http:// ou https://');
+                return { items: [], erros: erros, avisos: avisos };
+            }
+            if (!titulos.length) {
+                urls.forEach(function (u, i) { items.push({ titulo: 'Foto ' + (i + 1), url: converterURLDrive(u.valor) }); });
+                avisos.push('Non se detectaron títulos — xeráronse automaticamente (Foto 1, Foto 2...).');
+                return { items: items, erros: erros, avisos: avisos };
+            }
+            if (titulos.length === urls.length) {
+                for (var i = 0; i < urls.length; i++) items.push({ titulo: titulos[i].valor, url: converterURLDrive(urls[i].valor) });
+                return { items: items, erros: erros, avisos: avisos };
+            }
+            if (titulos.length > urls.length) {
+                erros.push('Hai ' + (titulos.length - urls.length) + ' título(s) de máis sen URL.');
+                for (var i = titulos.length - urls.length; i < titulos.length; i++) items.push({ titulo: titulos[i].valor, url: converterURLDrive(urls[i - (titulos.length - urls.length)].valor) });
+                return { items: items, erros: erros, avisos: avisos };
+            }
+            avisos.push((urls.length - titulos.length) + ' URL(s) sen título — xeráronse xenéricos.');
+            for (var i = 0; i < urls.length; i++) items.push({ titulo: i < titulos.length ? titulos[i].valor : ('Foto ' + (i + 1)), url: converterURLDrive(urls[i].valor) });
+            return { items: items, erros: erros, avisos: avisos };
         }
 
         cargarDatosIniciais();
