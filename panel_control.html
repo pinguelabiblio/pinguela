@@ -2219,7 +2219,7 @@
                                         var extra = cats.length - maxVis;
                                         var idC = 'sc-' + idx + '-' + si;
                                         var visTxt = cats.slice(0, maxVis).join(', ');
-                                        catHtml = '<span class="sub-item-cat"><span id="' + idC + '-show">' + visTxt + ' <span onclick="document.getElementById(\'' + idC + '-show\').style.display=\'none\';document.getElementById(\'' + idC + '-full\').style.display=\'inline\'" style="cursor:pointer;color:var(--primaria);font-weight:600;">(+' + extra + ')</span></span><span id="' + idC + '-full" style="display:none;">' + cats.join(', ') + ' <span onclick="document.getElementById(\'' + idC + '-show\').style.display=\'inline\';document.getElementById(\'' + idC + '-full\').style.display=\'none\'" style="cursor:pointer;color:var(--primaria);font-weight:600;">(menos)</span></span></span>';
+                                        catHtml = '<span class="sub-item-cat"><span id="' + idC + '-show">' + visTxt + ' <span onclick="document.getElementById(\'' + idC + '-show\').style.display=\'none\';document.getElementById(\'' + idC + '-full\').style.display=\'inline\'" style="cursor:pointer;text-decoration:underline;color:#fff;font-weight:700;">(+' + extra + ')</span></span><span id="' + idC + '-full" style="display:none;">' + cats.join(', ') + ' <span onclick="document.getElementById(\'' + idC + '-show\').style.display=\'inline\';document.getElementById(\'' + idC + '-full\').style.display=\'none\'" style="cursor:pointer;text-decoration:underline;color:#fff;font-weight:700;">(menos)</span></span></span>';
                                     }
                                 }
                                 return '<div class="sub-item">'
@@ -2295,7 +2295,7 @@
                                 + '<div><label>Etiqueta</label><input type="text" value="' + (sec.efemeride_etiqueta || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_etiqueta" data-index="' + idx + '" data-tipo="seccion" placeholder="Ex: Día Mundial do Libro" style="width:100%;padding:5px 8px;border:var(--bordo-fino);border-radius:var(--radius-baixo);font-family:inherit;font-size:13px;" /></div>'
                                 + '<div class="efemeride-fila tres">'
                                 + '<div><label>Imaxe fondo</label><input type="text" value="' + (sec.efemeride_imaxe || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_imaxe" data-index="' + idx + '" data-tipo="seccion" placeholder="URL" style="width:100%;padding:5px 8px;border:var(--bordo-fino);border-radius:var(--radius-baixo);font-family:inherit;font-size:13px;" /></div>'
-                                + '<div><label>Logotipo</label><input type="text" value="' + (sec.efemeride_logo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_logo" data-index="' + idx + '" data-tipo="seccion" placeholder="URL" style="width:100%;padding:5px 8px;border:var(--bordo-fino);border-radius:var(--radius-baixo);font-family:inherit;font-size:13px;" /></div>'
+                                + '<div class="efemeride-logo-wrap"><label>Logotipo</label><input type="text" value="' + (sec.efemeride_logo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_logo" data-index="' + idx + '" data-tipo="seccion" placeholder="URL" style="width:100%;padding:5px 8px;border:var(--bordo-fino);border-radius:var(--radius-baixo);font-family:inherit;font-size:13px;" /></div>'
                                 + '<div><label>Título programa</label><input type="text" value="' + (sec.efemeride_programa_titulo || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '" data-campo="efemeride_programa_titulo" data-index="' + idx + '" data-tipo="seccion" placeholder="Programa..." style="width:100%;padding:5px 8px;border:var(--bordo-fino);border-radius:var(--radius-baixo);font-family:inherit;font-size:13px;" /></div>'
                                 + '</div>'
                                 + '<div class="editable-field ancho-completo"><button type="button" class="btn-colapsable" data-target="desc-ef-' + idx + '"><i class="fas fa-chevron-right"></i> Descrición</button>'
@@ -2320,6 +2320,7 @@
 
             engadirEventosCards('seccion');
             engadirEditores('seccion');
+            engadirPlaceholdersEfemeride();
         }
 
         /* -------------------------------------------------------
@@ -2346,6 +2347,38 @@
                         else if (tipo === 'seccion') renderizarSeccions();
                     });
                 }
+            });
+        }
+
+        function engadirPlaceholdersEfemeride() {
+            var defaultImages = {
+                dia_do_libro: { imaxe: 'imaxes/libro.png', logo: null },
+                dia_das_bibliotecas: { imaxe: 'imaxes/bibliotecas.png', logo: 'imaxes/logo_b.png' },
+                dia_da_poesia: { imaxe: 'imaxes/poesia.png', logo: null },
+                mes_de_rosalia: { imaxe: 'imaxes/rosalia.png', logo: null },
+                dia_das_letras: { imaxe: 'imaxes/letras.png', logo: 'imaxes/rag.png' }
+            };
+            document.querySelectorAll('.efemeride-editor').forEach(function (editor) {
+                var variantSelect = editor.querySelector('[data-campo="efemeride_variante"]');
+                var imaxeInput = editor.querySelector('[data-campo="efemeride_imaxe"]');
+                var logoInput = editor.querySelector('[data-campo="efemeride_logo"]');
+                var logoWrap = editor.querySelector('.efemeride-logo-wrap');
+                if (!variantSelect || !imaxeInput) return;
+                function actualizar() {
+                    var v = variantSelect.value;
+                    var defs = defaultImages[v] || defaultImages.dia_do_libro;
+                    imaxeInput.placeholder = defs.imaxe + ' (por defecto)';
+                    if (logoInput && logoWrap) {
+                        if (defs.logo) {
+                            logoWrap.style.display = '';
+                            logoInput.placeholder = defs.logo + ' (por defecto)';
+                        } else {
+                            logoWrap.style.display = 'none';
+                        }
+                    }
+                }
+                actualizar();
+                variantSelect.addEventListener('change', actualizar);
             });
         }
 
