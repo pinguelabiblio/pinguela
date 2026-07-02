@@ -2209,23 +2209,28 @@
                             var itemsHtml = subData.map(function (s, si) {
                                 var iconSVGs = { shield: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>', heart: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', users: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>', clock: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', 'book-open': '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>', 'message-circle': '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>', sun: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>', rocket: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>', globe: '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' };
                                 var ico = iconSVGs[s.icona] || iconSVGs.shield;
-                                var cat = s.filtro_categoria ? '<span class="sub-item-cat">' + s.filtro_categoria.replace(/</g, '&lt;') + '</span>' : '';
+                                var cats = s.filtro_categoria ? s.filtro_categoria.split(',').map(function(c){return c.trim();}).filter(function(c){return c;}) : [];
+                                var catHtml = cats.length ? '<span class="sub-item-cat">' + cats.join(', ') + '</span>' : '';
                                 return '<div class="sub-item">'
                                     + '<span class="sub-item-icon">' + ico + '</span>'
                                     + '<div class="sub-item-info"><span class="sub-item-titulo">' + (s.titulo || '').replace(/</g, '&lt;') + '</span>'
                                     + (s.subtitulo ? '<span class="sub-item-sub">' + s.subtitulo.replace(/</g, '&lt;') + '</span>' : '')
                                     + '</div>'
-                                    + (cat ? cat : '')
+                                    + (catHtml ? catHtml : '')
                                     + '<button type="button" class="sub-item-remove" data-sub-index="' + si + '" data-index="' + idx + '" title="Eliminar">&times;</button>'
                                     + '</div>';
                             }).join('');
-                            var catOpts = '<option value="">Sen categoría</option>' + categorias.map(function (c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+                            var catCheckboxes = categorias.map(function (c) {
+                                var escaped = c.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                                return '<label style="display:flex;align-items:center;gap:3px;font-size:11px;cursor:pointer;white-space:nowrap;"><input type="checkbox" class="sub-cat-checkbox" value="' + escaped + '"> ' + c + '</label>';
+                            }).join('');
                             return '<div class="editable-field ancho-completo"><label>Subapartados</label>'
                                 + '<div class="subapartados-container">'
                                 + '<input type="hidden" value="' + subapartadosValor.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') + '" data-campo="filtro_categoria2" data-index="' + idx + '" data-tipo="seccion">'
                                 + '<div class="sub-items-list">' + itemsHtml + '</div>'
                                 + '<button type="button" class="btn-icon btn-sub-apartados-add" data-index="' + idx + '" style="margin-top:6px;font-size:12px;"><i class="fas fa-plus-circle"></i> Engadir subapartado</button>'
-                                + '<div class="subapartados-add" style="display:none;">'
+                                + '<div class="subapartados-add" style="display:none;flex-direction:column;gap:4px;">'
+                                + '<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">'
                                 + '<input type="text" class="sub-titulo-input" placeholder="Título" style="flex:1;min-width:100px;">'
                                 + '<input type="text" class="sub-subtitulo-input" placeholder="Subtítulo" style="flex:1;min-width:120px;">'
                                 + '<select class="sub-icona-select">'
@@ -2233,11 +2238,14 @@
                                 + '<option value="clock">Reloxo</option><option value="book-open">Libro</option><option value="message-circle">Mensaxe</option>'
                                 + '<option value="sun">Sol</option><option value="rocket">Foguete</option><option value="globe">Globo</option>'
                                 + '</select>'
-                                + '<select class="sub-categoria-select">' + catOpts + '</select>'
                                 + '<button type="button" class="btn-icon sub-add-btn" data-index="' + idx + '"><i class="fas fa-check"></i></button>'
                                 + '<button type="button" class="btn-icon sub-cancel-btn" style="color:var(--cor-texto-mutado);"><i class="fas fa-times"></i></button>'
+                                + '</div>'
+                                + '<div style="display:flex;flex-wrap:wrap;gap:3px 6px;padding:3px 0 0 0;border-top:1px solid var(--cor-borda,rgba(0,0,0,0.1));">'
+                                + catCheckboxes
+                                + '</div>'
                                 + '</div></div></div>'
-                                + '<div style="font-size:11px;color:var(--cor-texto-mutado);margin-top:2px;">Cada subapartado filtra libros por categoría no carrusel.</div>';
+                                + '<div style="font-size:11px;color:var(--cor-texto-mutado);margin-top:2px;">Cada subapartado filtra libros polas categorías seleccionadas (múltiples permitidas).</div>';
                         }() : '')
                         + (eClub ? function () {
                             var recData = [];
@@ -2487,15 +2495,16 @@
                         var tituloInput = container.querySelector('.sub-titulo-input');
                         var subtituloInput = container.querySelector('.sub-subtitulo-input');
                         var iconaSelect = container.querySelector('.sub-icona-select');
-                        var catSelect = container.querySelector('.sub-categoria-select');
                         var idx = parseInt(this.dataset.index);
                         var titulo = tituloInput.value.trim();
                         if (!titulo) { mostrarAviso('Escribe o título', 'erro'); return; }
                         var subtitulo = subtituloInput.value.trim();
                         var icona = iconaSelect.value;
-                        var cat = catSelect.value;
+                        var catChecks = container.querySelectorAll('.sub-cat-checkbox:checked');
+                        var cats = [];
+                        Array.prototype.forEach.call(catChecks, function (cb) { if (cb.value) cats.push(cb.value); });
                         var sub = { titulo: titulo, subtitulo: subtitulo, icona: icona };
-                        if (cat) sub.filtro_categoria = cat;
+                        if (cats.length) sub.filtro_categoria = cats.join(',');
                         var arr = seccions;
                         var actual = [];
                         try { actual = JSON.parse(arr[idx].filtro_categoria2 || '[]'); } catch (e) { actual = []; }
