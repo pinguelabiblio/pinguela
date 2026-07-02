@@ -6166,7 +6166,7 @@
 
             botons.forEach(function (b, bi) {
                 var svg = iconSVG[b.icona] || '';
-                html += '<button data-filtro="' + ((b.filtro_categoria || b.titulo).toLowerCase().split(/,\s*/)[0] || '') + '">'
+                html += '<button data-filtro="' + bi + '">'
                     + '<span class="icona-filtro">' + svg + '</span>'
                     + '<span class="tira-titulo">' + b.titulo + '</span>'
                     + '<span class="tira-sub">' + b.subtitulo + '</span>'
@@ -6184,8 +6184,8 @@
                 }
                 lista = lista.slice(0, 8);
                 if (!lista.length) return;
-                var idCarrusel = id + '-' + chaves[0];
-                html += '<div class="carrusel-filtrado" data-filtro="' + chaves[0] + '">'
+                var idCarrusel = id + '-' + bi;
+                html += '<div class="carrusel-filtrado" data-filtro="' + bi + '">'
                     + '<div class="carrusel-cinta"><div class="carrusel-cinta-header">'
                     + '<h3>' + b.titulo + ' <span class="badge-cinta">' + lista.length + '</span></h3>'
                     + '<div class="carrusel-flechas">'
