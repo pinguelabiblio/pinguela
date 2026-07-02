@@ -4813,22 +4813,23 @@
     <!-- ============================================================
          FOOTER
          ============================================================ -->
-    <footer>
+    <footer id="footer">
         <div class="contenedor">
             <div class="footer-grela">
                 <div class="footer-col footer-col-esq">
-                    <a href="https://www.edu.xunta.gal/centros/iespinguela/" target="_blank" rel="noopener">
+                    <a href="https://www.edu.xunta.gal/centros/iesapinguela/" target="_blank" rel="noopener">
                         <img src="imaxes/pinguela_logo_transp.png" alt="IES A Pinguela">
                     </a>
                 </div>
                 <div class="footer-col footer-col-centro">
-                    <p class="footer-rexistro">Biblioteca do IES A Pinguela</p>
-                    <p class="footer-telefono">982 82 80 51</p>
-                    <p class="footer-email"><a href="mailto:ies.pinguela@edu.xunta.gal">ies.pinguela@edu.xunta.gal</a></p>
-                    <p class="footer-copy">&copy; 2026 · IES A Pinguela · Monforte de Lemos</p>
+                    <p class="footer-rexistro" id="footer-titulo"></p>
+                    <p class="footer-sub" id="footer-subtitulo"></p>
+                    <p class="footer-telefono" id="footer-telefono"></p>
+                    <p class="footer-email"><a href="" id="footer-email-link"></a></p>
+                    <p class="footer-copy" id="footer-copy"></p>
                 </div>
                 <div class="footer-col footer-col-dereita">
-                    <a href="https://bibliotecas.edu.xunta.gal/programas-e-concursos/plan-de-mellora-de-bibliotecas-escolares" target="_blank" rel="noopener">
+                    <a href="https://www.plambe.gal/" target="_blank" rel="noopener">
                         <img src="imaxes/plambe.png" alt="PLAMBE">
                     </a>
                 </div>
@@ -4921,8 +4922,8 @@
     Orde de carga: Sheets API → Worker → CSVs locais → Exemplos fixos
     ================================================================ -->
     <script>
-        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
-        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
+        // window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        // window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
 
     <!-- ============================================================
@@ -5171,7 +5172,12 @@
                 hero_libro_cita: cfg.hero_libro_cita || 'A literatura ten forza.',
                 hero_libro_portada: cfg.hero_libro_portada || 'https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80',
                 recursos: (function () { try { return JSON.parse(cfg.recursos || '[]'); } catch (e) { return []; } })(),
-                email_suxestions: cfg.email_suxestions || 'biblioteca@iesapinguela.es'
+                email_suxestions: cfg.email_suxestions || 'biblioteca@iesapinguela.es',
+                footer_titulo: cfg.footer_titulo || 'Biblioteca do IES A Pinguela',
+                footer_subtitulo: cfg.footer_subtitulo || 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)',
+                footer_telefono: cfg.footer_telefono || '982 82 80 51',
+                footer_email: cfg.footer_email || 'ies.pinguela@edu.xunta.gal',
+                footer_copy: cfg.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos'
             };
 
             const contData = (parseCSV(await rCont.text())).datos;
@@ -5207,6 +5213,7 @@
             }
 
             const secData = (parseCSV(await rSec.text())).datos;
+            secData.forEach(function (s) { if (['bibliobenestar', 'memoria', 'planetario'].indexOf(s.tipo_seccion) > -1) s.tipo_seccion = 'subapartados'; });
             seccions = secData
                 .filter(s => s.activo && s.activo.trim().toUpperCase() === 'SI')
                 .sort((a, b) => parseInt(a.orde) - parseInt(b.orde));
@@ -5295,7 +5302,7 @@
 
             // 5. Fallback final: exemplos fixos
             if (!libros.length) {
-                configuracion = { ticker: 'Benvidos', ticker_activo: 'SI', hero_tipo: 'A', hero_titulo: 'Biblioteca IES A Pinguela', hero_subtitulo: 'Benvido ao espazo cultural', hero_imaxe: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80', hero_boton_texto: 'Explorar', hero_boton_link: '#seccion-eventos' };
+                configuracion = { ticker: 'Benvidos', ticker_activo: 'SI', hero_tipo: 'A', hero_titulo: 'Biblioteca IES A Pinguela', hero_subtitulo: 'Benvido ao espazo cultural', hero_imaxe: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80', hero_boton_texto: 'Explorar', hero_boton_link: '#seccion-eventos', footer_titulo: 'Biblioteca do IES A Pinguela', footer_subtitulo: 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)', footer_telefono: '982 82 80 51', footer_email: 'ies.pinguela@edu.xunta.gal', footer_copy: '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos' };
                 libros = [{ titulo: 'Libro de exemplo', autor: 'Autor', imaxe: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80', descricion: 'Descrición de exemplo', categoria: 'Xeral', nivel: '14+', link: '#', favorito_de: '', etiqueta: '', disponible: 'SI', cita: '' }];
                 eventos = [{ titulo: 'Evento de exemplo', autor: 'Autora', data: '12 Maio 2026', hora: '11:30h', categoria: 'Outro', imaxe: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80', destacado: 'SI', hero_destacado: 'NON', descricion: '' }];
                 seccions = [{ tipo_seccion: 'carrusel', titulo: 'Recomendacións', filtro_categoria: '', orde: '1', activo: 'SI' }];
@@ -5313,6 +5320,7 @@
             renderizarTicker();
             renderizarHero();
             renderizarSeccionsDinamicas();
+            renderizarFooter();
             inicializarModal();
             inicializarDragSliders();
         }
@@ -5322,6 +5330,23 @@
            Se ticker_activo = "NON", oculta o contedor.
            Os items sepáranse por "·" no CSV.
            ------------------------------------------------------- */
+        /* -------------------------------------------------------
+           renderizarFooter() — enche o pé de páxina cos datos
+           ------------------------------------------------------- */
+        function renderizarFooter() {
+            var cfg = configuracion || {};
+            var el = document.getElementById('footer-titulo');
+            if (el) el.textContent = cfg.footer_titulo || 'Biblioteca do IES A Pinguela';
+            el = document.getElementById('footer-subtitulo');
+            if (el) el.textContent = cfg.footer_subtitulo || 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)';
+            el = document.getElementById('footer-telefono');
+            if (el) el.textContent = '\u260E ' + (cfg.footer_telefono || '982 82 80 51');
+            el = document.getElementById('footer-email-link');
+            if (el) { el.textContent = cfg.footer_email || 'ies.pinguela@edu.xunta.gal'; el.href = 'mailto:' + (cfg.footer_email || 'ies.pinguela@edu.xunta.gal'); }
+            el = document.getElementById('footer-copy');
+            if (el) el.textContent = cfg.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos';
+        }
+
         function renderizarTicker() {
             const tickerContainer = document.getElementById('ticker-novidades');
             if (!tickerContainer) return;
@@ -5503,6 +5528,7 @@
                     case 'memoria':
                     case 'planetario':
                     case 'subapartados':
+                    case 'subseccions':
                         html += xerarSeccionFiltros(secc, secc.tipo_seccion);
                         break;
                     case 'preferidos':
