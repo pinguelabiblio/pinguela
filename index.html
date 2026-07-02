@@ -290,8 +290,9 @@
             }
         }
 
-        [data-theme="dark"] .logo-area img {
-            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
+        [data-theme="dark"] .logo-area img,
+        [data-theme="dark"] #loading-screen img {
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
         }
 
         nav .menu-enlaces {
@@ -5664,7 +5665,7 @@
                 });
                 html += '</div>';
             } else {
-                html += '<p style="color:var(--cor-texto-mutado);">Non hai eventos proximos.</p>';
+                html += '<p style="color:var(--cor-texto-mutado);">Non hai eventos próximos.</p>';
             }
 
             if (menores.length) {
