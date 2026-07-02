@@ -1760,7 +1760,7 @@
             });
 
             document.getElementById('btn-engadir-recurso').onclick = function () {
-                recursos.push({ titulo: 'Novo recurso', url: 'https://', icona: 'external-link' });
+                recursos.unshift({ titulo: 'Novo recurso', url: 'https://', icona: 'external-link' });
                 renderizarRecursos();
             };
         }
@@ -2777,7 +2777,7 @@
            Engaden un elemento por defecto ó array e renderizan.
            ------------------------------------------------------- */
         document.getElementById('btn-engadir-libro').addEventListener('click', function () {
-            contido.push({
+            contido.unshift({
                 tipo: 'libro', titulo: 'Novo libro', autor: 'Autor',
                 imaxe: '', descricion: 'Descrición', categoria: 'Xeral',
                 nivel: '14+', link: '#', favorito_de: '',
@@ -2791,7 +2791,7 @@
             var hoxe = new Date();
             var mes = ['Xan', 'Feb', 'Mar', 'Abr', 'Mai', 'Xuñ', 'Xul', 'Ago', 'Set', 'Out', 'Nov', 'Dec'][hoxe.getMonth()];
             var dataStr = hoxe.getDate() + ' ' + mes + ' ' + hoxe.getFullYear();
-            contido.push({
+            contido.unshift({
                 tipo: 'evento', titulo: 'Novo evento', autor: 'Autor/a', descricion: '',
                 data: dataStr, hora: '12:00', categoria: 'Outro',
                 imaxe: '', destacado: 'NON', hero_destacado: 'NON'
@@ -2800,7 +2800,7 @@
         });
 
         document.getElementById('btn-engadir-seccion').addEventListener('click', function () {
-            seccions.push({
+            seccions.unshift({
                 tipo_seccion: 'carrusel', titulo: 'Nova sección',
                 filtro_categoria: '', filtro_categoria2: '', idioma: '', etiqueta: '',
                 orde: String(seccions.length + 1), activo: 'SI'
@@ -2811,7 +2811,7 @@
         document.getElementById('btn-engadir-album').addEventListener('click', function () {
             var nome = prompt('Nome do novo álbum:');
             if (nome && nome.trim()) {
-                galeriaDatos.push({ directorio: nome.trim(), titulo: 'Novo álbum', descricion: '', url: '' });
+                galeriaDatos.unshift({ directorio: nome.trim(), titulo: 'Novo álbum', descricion: '', url: '' });
                 renderizarGaleria();
             }
         });
