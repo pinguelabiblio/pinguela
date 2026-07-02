@@ -115,11 +115,21 @@
         .efemeride {
             animation: efemeride-aparecer 0.6s cubic-bezier(0.25, 1, 0.5, 1) both;
             transition: transform 0.35s ease, box-shadow 0.35s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            border-radius: var(--radius-medio);
         }
 
         .efemeride:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.10);
+        }
+
+        [data-theme="dark"] .efemeride {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        [data-theme="dark"] .efemeride:hover {
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
         }
 
         .efemeride:nth-child(2) {
@@ -2209,6 +2219,7 @@
             min-height: 340px;
             position: relative;
             overflow: hidden;
+            background: var(--bg-superficie);
         }
 
         .efemeride-letras .efemeride-textos {
@@ -2228,7 +2239,7 @@
             right: 0;
             top: 0;
             bottom: 0;
-            width: 55%;
+            width: 45%;
             z-index: 1;
             display: flex;
             align-items: center;
@@ -2239,11 +2250,11 @@
         .efemeride-letras .efemeride-imaxe::before {
             content: '';
             position: absolute;
-            inset: 10px;
-            border: 2px solid rgba(255, 215, 0, 0.15);
+            inset: 8px;
+            border: 2px solid rgba(255, 215, 0, 0.18);
             z-index: 2;
             pointer-events: none;
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         .efemeride-letras .efemeride-imaxe::after {
@@ -2334,6 +2345,28 @@
             font-size: clamp(22px, 3.2vw, 34px);
             font-weight: 800;
             margin: 4px 0;
+        }
+
+        [data-theme="dark"] .efemeride-letras .efemeride-textos .efemeride-titulo {
+            color: #90CAF9;
+        }
+
+        [data-theme="dark"] .efemeride-letras .efemeride-textos .efemeride-destacado {
+            color: #FFD54F;
+            background: rgba(255, 215, 0, 0.08);
+            border-left-color: #FFD54F;
+        }
+
+        [data-theme="dark"] .efemeride-letras .efemeride-textos .efemeride-descricion {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        [data-theme="dark"] .efemeride-letras .efemeride-textos .efemeride-secundario {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        [data-theme="dark"] .efemeride-letras .efemeride-textos .efemeride-etiqueta {
+            color: rgba(100, 181, 246, 0.7);
         }
 
         /* === Responsive === */
@@ -2782,6 +2815,15 @@
             text-transform: uppercase;
             font-weight: 500;
             color: var(--primaria);
+        }
+
+        [data-theme="dark"] .cartel-data-badge {
+            background: rgba(30, 30, 40, 0.92);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        [data-theme="dark"] .cartel-data-badge span {
+            color: #F6AD55;
         }
 
         .cartel-contido {
@@ -4197,8 +4239,12 @@
 
         @media (max-width: 768px) {
             .footer-grela {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
                 gap: 20px;
+            }
+            .footer-col-centro {
+                grid-column: 1 / -1;
+                text-align: center;
             }
             .footer-col-esq,
             .footer-col-dereita {
@@ -4818,7 +4864,7 @@
             <div class="footer-grela">
                 <div class="footer-col footer-col-esq">
                     <a href="https://www.edu.xunta.gal/centros/iesapinguela/" target="_blank" rel="noopener">
-                        <img src="imaxes/pinguela_logo_transp.png" alt="IES A Pinguela">
+                        <img id="footer-logo-esq" src="imaxes/pinguela_logo_transp.png" alt="IES A Pinguela">
                     </a>
                 </div>
                 <div class="footer-col footer-col-centro">
@@ -4830,7 +4876,7 @@
                 </div>
                 <div class="footer-col footer-col-dereita">
                     <a href="https://www.plambe.gal/" target="_blank" rel="noopener">
-                        <img src="imaxes/plambe.png" alt="PLAMBE">
+                        <img id="footer-logo-der" src="imaxes/plambe.png" alt="PLAMBE">
                     </a>
                 </div>
             </div>
@@ -5177,7 +5223,9 @@
                 footer_subtitulo: cfg.footer_subtitulo || 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)',
                 footer_telefono: cfg.footer_telefono || '982 82 80 51',
                 footer_email: cfg.footer_email || 'ies.pinguela@edu.xunta.gal',
-                footer_copy: cfg.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos'
+                footer_copy: cfg.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos',
+                logo1: cfg.logo1 || '',
+                logo2: cfg.logo2 || ''
             };
 
             const contData = (parseCSV(await rCont.text())).datos;
@@ -5302,7 +5350,7 @@
 
             // 5. Fallback final: exemplos fixos
             if (!libros.length) {
-                configuracion = { ticker: 'Benvidos', ticker_activo: 'SI', hero_tipo: 'A', hero_titulo: 'Biblioteca IES A Pinguela', hero_subtitulo: 'Benvido ao espazo cultural', hero_imaxe: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80', hero_boton_texto: 'Explorar', hero_boton_link: '#seccion-eventos', footer_titulo: 'Biblioteca do IES A Pinguela', footer_subtitulo: 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)', footer_telefono: '982 82 80 51', footer_email: 'ies.pinguela@edu.xunta.gal', footer_copy: '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos' };
+                configuracion = { ticker: 'Benvidos', ticker_activo: 'SI', hero_tipo: 'A', hero_titulo: 'Biblioteca IES A Pinguela', hero_subtitulo: 'Benvido ao espazo cultural', hero_imaxe: 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80', hero_boton_texto: 'Explorar', hero_boton_link: '#seccion-eventos', footer_titulo: 'Biblioteca do IES A Pinguela', footer_subtitulo: 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)', footer_telefono: '982 82 80 51', footer_email: 'ies.pinguela@edu.xunta.gal', footer_copy: '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos', logo1: '', logo2: '' };
                 libros = [{ titulo: 'Libro de exemplo', autor: 'Autor', imaxe: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80', descricion: 'Descrición de exemplo', categoria: 'Xeral', nivel: '14+', link: '#', favorito_de: '', etiqueta: '', disponible: 'SI', cita: '' }];
                 eventos = [{ titulo: 'Evento de exemplo', autor: 'Autora', data: '12 Maio 2026', hora: '11:30h', categoria: 'Outro', imaxe: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80', destacado: 'SI', hero_destacado: 'NON', descricion: '' }];
                 seccions = [{ tipo_seccion: 'carrusel', titulo: 'Recomendacións', filtro_categoria: '', orde: '1', activo: 'SI' }];
@@ -5335,16 +5383,33 @@
            ------------------------------------------------------- */
         function renderizarFooter() {
             var cfg = configuracion || {};
-            var el = document.getElementById('footer-titulo');
-            if (el) el.textContent = cfg.footer_titulo || 'Biblioteca do IES A Pinguela';
+            var el, val;
+
+            el = document.getElementById('footer-logo-esq');
+            if (el) el.src = cfg.logo1 || 'imaxes/pinguela_logo_transp.png';
+
+            el = document.getElementById('footer-logo-der');
+            if (el) el.src = cfg.logo2 || 'imaxes/plambe.png';
+
+            el = document.getElementById('footer-titulo');
+            val = cfg.footer_titulo || 'Biblioteca do IES A Pinguela';
+            if (el) { el.textContent = val; el.style.display = val ? '' : 'none'; }
+
             el = document.getElementById('footer-subtitulo');
-            if (el) el.textContent = cfg.footer_subtitulo || 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)';
+            val = cfg.footer_subtitulo || '';
+            if (el) { el.textContent = val; el.style.display = val ? '' : 'none'; }
+
             el = document.getElementById('footer-telefono');
-            if (el) el.textContent = '\u260E ' + (cfg.footer_telefono || '982 82 80 51');
+            val = cfg.footer_telefono || '';
+            if (el) { el.textContent = val ? '\u260E ' + val : ''; el.style.display = val ? '' : 'none'; }
+
             el = document.getElementById('footer-email-link');
-            if (el) { el.textContent = cfg.footer_email || 'ies.pinguela@edu.xunta.gal'; el.href = 'mailto:' + (cfg.footer_email || 'ies.pinguela@edu.xunta.gal'); }
+            val = cfg.footer_email || '';
+            if (el) { el.textContent = val; el.href = val ? 'mailto:' + val : '#'; el.style.display = val ? '' : 'none'; }
+
             el = document.getElementById('footer-copy');
-            if (el) el.textContent = cfg.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos';
+            val = cfg.footer_copy || '';
+            if (el) { el.textContent = val; el.style.display = val ? '' : 'none'; }
         }
 
         function renderizarTicker() {
