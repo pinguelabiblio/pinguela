@@ -4969,8 +4969,8 @@
     Orde de carga: Sheets API → Worker → CSVs locais → Exemplos fixos
     ================================================================ -->
     <script>
-        window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
-        window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
+        // window._SHEETS_KEY = 'AIzaSyC3L9_DJtqn4MOFnbMD8UPDyzS0nS35mFE';
+        // window._API_URL = 'https://biblio.pinguelabiblio.workers.dev/';
     </script>
 
     <!-- ============================================================
@@ -6166,7 +6166,7 @@
 
             botons.forEach(function (b, bi) {
                 var svg = iconSVG[b.icona] || '';
-                html += '<button data-filtro="' + ((b.filtro_categoria || b.titulo).toLowerCase()) + '">'
+                html += '<button data-filtro="' + ((b.filtro_categoria || b.titulo).toLowerCase().split(/,\s*/)[0] || '') + '">'
                     + '<span class="icona-filtro">' + svg + '</span>'
                     + '<span class="tira-titulo">' + b.titulo + '</span>'
                     + '<span class="tira-sub">' + b.subtitulo + '</span>'
