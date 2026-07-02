@@ -1784,7 +1784,7 @@
             });
 
             var html = '';
-            Object.keys(directorios).sort().forEach(function (dir) {
+            Object.keys(directorios).forEach(function (dir) {
                 var imgs = directorios[dir];
                 var portada = imgs.length ? imgs[0].item : null;
                 var portadaUrl = portada ? converterURLDrive(portada.url) : '';
