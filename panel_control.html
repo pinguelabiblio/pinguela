@@ -1141,6 +1141,20 @@
                 <div class="card-item"><label title="Teléfono que se mostra no footer">Teléfono</label><input type="text" id="footer_telefono" placeholder="982 82 80 51" /></div>
                 <div class="card-item"><label title="Email que se mostra no footer">Email</label><input type="email" id="footer_email" placeholder="ies.pinguela@edu.xunta.gal" /></div>
                 <div class="card-item"><label title="Texto de copyright do footer">Copyright</label><input type="text" id="footer_copy" placeholder="© 2026 · IES A Pinguela · Monforte de Lemos" /></div>
+                <div class="card-item" style="grid-column:span 1;min-width:0;">
+                    <label>Logo 1</label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="text" id="logo1" placeholder="imaxes/pinguela_logo_transp.png" style="flex:1;min-width:0;" oninput="document.getElementById('preview-logo1').src=this.value||'imaxes/pinguela_logo_transp.png';" />
+                        <img class="preview-img" id="preview-logo1" src="imaxes/pinguela_logo_transp.png" alt="preview" style="height:36px;width:auto;object-fit:contain;border-radius:var(--radius-baixo);border:var(--bordo-fino);flex-shrink:0;cursor:pointer;" onclick="var v=prompt('URL ou ruta do logo 1:',document.getElementById('logo1').value);if(v){document.getElementById('logo1').value=v;document.getElementById('preview-logo1').src=v;}" />
+                    </div>
+                </div>
+                <div class="card-item" style="grid-column:span 1;min-width:0;">
+                    <label>Logo 2</label>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <input type="text" id="logo2" placeholder="imaxes/plambe.png" style="flex:1;min-width:0;" oninput="document.getElementById('preview-logo2').src=this.value||'imaxes/plambe.png';" />
+                        <img class="preview-img" id="preview-logo2" src="imaxes/plambe.png" alt="preview" style="height:36px;width:auto;object-fit:contain;border-radius:var(--radius-baixo);border:var(--bordo-fino);flex-shrink:0;cursor:pointer;" onclick="var v=prompt('URL ou ruta do logo 2:',document.getElementById('logo2').value);if(v){document.getElementById('logo2').value=v;document.getElementById('preview-logo2').src=v;}" />
+                    </div>
+                </div>
             </div>
             <p style="margin:4px 0 0 0;color:var(--cor-texto-mutado);font-size:12px;"><i class="fas fa-info-circle"></i> Estes datos móstransse no pé de todas as páxinas.</p>
 
@@ -1457,11 +1471,13 @@
                 footer_subtitulo: row.footer_subtitulo || 'Plan de Mellora de Bibliotecas Escolares (PLAMBE)',
                 footer_telefono: row.footer_telefono || '982 82 80 51',
                 footer_email: row.footer_email || 'ies.pinguela@edu.xunta.gal',
-                footer_copy: row.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos'
+                footer_copy: row.footer_copy || '\u00a9 2026 \u00b7 IES A Pinguela \u00b7 Monforte de Lemos',
+                logo1: row.logo1 || '',
+                logo2: row.logo2 || ''
             };
             try { recursos = JSON.parse(row.recursos || '[]'); } catch (e) { recursos = []; }
             if (!Array.isArray(recursos)) recursos = [];
-            ['hero_boton2_texto', 'hero_boton2_link', 'email_suxestions', 'footer_titulo', 'footer_subtitulo', 'footer_telefono', 'footer_email', 'footer_copy'].forEach(function (k) {
+            ['hero_boton2_texto', 'hero_boton2_link', 'email_suxestions', 'footer_titulo', 'footer_subtitulo', 'footer_telefono', 'footer_email', 'footer_copy', 'logo1', 'logo2'].forEach(function (k) {
                 if (cabeceirasConfig.indexOf(k) === -1) cabeceirasConfig.push(k);
             });
             cargarConfigEnForm();
@@ -1589,6 +1605,10 @@
             document.getElementById('footer_telefono').value = c.footer_telefono || '';
             document.getElementById('footer_email').value = c.footer_email || '';
             document.getElementById('footer_copy').value = c.footer_copy || '';
+            document.getElementById('logo1').value = c.logo1 || '';
+            document.getElementById('preview-logo1').src = c.logo1 || 'imaxes/pinguela_logo_transp.png';
+            document.getElementById('logo2').value = c.logo2 || '';
+            document.getElementById('preview-logo2').src = c.logo2 || 'imaxes/plambe.png';
             var tickerCheck = document.getElementById('ticker_activo_check');
             if (tickerCheck) {
                 tickerCheck.checked = (c.ticker_activo && c.ticker_activo.toUpperCase() === 'SI');
@@ -1615,6 +1635,8 @@
             configuracion.footer_telefono = document.getElementById('footer_telefono').value;
             configuracion.footer_email = document.getElementById('footer_email').value;
             configuracion.footer_copy = document.getElementById('footer_copy').value;
+            configuracion.logo1 = document.getElementById('logo1').value;
+            configuracion.logo2 = document.getElementById('logo2').value;
             var tickerCheck = document.getElementById('ticker_activo_check');
             configuracion.ticker_activo = tickerCheck ? (tickerCheck.checked ? 'SI' : 'NON') : 'SI';
         }
@@ -2814,8 +2836,8 @@
            Úsase cando non se poden cargar os CSVs do servidor.
            ------------------------------------------------------- */
         function cargarExemplos() {
-            var configCSV = 'ticker_activo,ticker,hero_tipo,hero_titulo,hero_subtitulo,hero_imaxe,hero_boton_texto,hero_boton_link,hero_boton2_texto,hero_boton2_link,hero_libro_titulo,hero_libro_autor,hero_libro_cita,hero_libro_portada,footer_titulo,footer_subtitulo,footer_telefono,footer_email,footer_copy\n'
-                + 'SI,"📚 Benvidos á biblioteca · Novidades · Encontros · Obradoiros",B,"Un universo de historias","A biblioteca é un espazo vivo.",https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80,"Explorar",#seccion-eventos,"Recomendacións",#seccion-carrusel,"As Malas Mulleres","Marilar Aleixandre","«A literatura ten forza.»",https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80,"Biblioteca do IES A Pinguela","Plan de Mellora de Bibliotecas Escolares (PLAMBE)","982 82 80 51","ies.pinguela@edu.xunta.gal","© 2026 · IES A Pinguela · Monforte de Lemos"';
+            var configCSV = 'ticker_activo,ticker,hero_tipo,hero_titulo,hero_subtitulo,hero_imaxe,hero_boton_texto,hero_boton_link,hero_boton2_texto,hero_boton2_link,hero_libro_titulo,hero_libro_autor,hero_libro_cita,hero_libro_portada,footer_titulo,footer_subtitulo,footer_telefono,footer_email,footer_copy,logo1,logo2\n'
+                + 'SI,"📚 Benvidos á biblioteca · Novidades · Encontros · Obradoiros",B,"Un universo de historias","A biblioteca é un espazo vivo.",https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1000&q=80,"Explorar",#seccion-eventos,"Recomendacións",#seccion-carrusel,"As Malas Mulleres","Marilar Aleixandre","«A literatura ten forza.»",https://images.unsplash.com/photo-1495640388908-05fa85288e61?auto=format&fit=crop&w=500&q=80,"Biblioteca do IES A Pinguela","Plan de Mellora de Bibliotecas Escolares (PLAMBE)","982 82 80 51","ies.pinguela@edu.xunta.gal","© 2026 · IES A Pinguela · Monforte de Lemos",,';
 
             var contidoCSV = 'tipo,titulo,descricion,categoria,imaxe,data,hora,autor,nivel,link,favorito_de,destacado,hero_destacado,orde,activo,etiqueta,disponible,cita\n'
                 + 'libro,O clan da loba,"Mitoloxía galega e adolescentes.",Novela xuvenil,https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&q=80,,,María Reimóndez,14+,#,,SI,,,Novidade,SI,\n'
